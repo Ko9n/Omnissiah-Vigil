@@ -1,0 +1,846 @@
+{
+  "folders": [
+    {
+      "id": "root",
+      "name": "Network Infrastructure",
+      "color": "#3B82F6",
+      "icon": "Network",
+      "expanded": true,
+      "children": [
+        {
+          "id": "core",
+          "name": "Core Network",
+          "parentId": "root",
+          "color": "#EF4444",
+          "icon": "Server",
+          "expanded": true,
+          "children": []
+        },
+        {
+          "id": "switches",
+          "name": "Switches",
+          "parentId": "root",
+          "color": "#10B981",
+          "icon": "Network",
+          "expanded": true,
+          "children": []
+        },
+        {
+          "id": "servers",
+          "name": "Servers",
+          "parentId": "root",
+          "color": "#8B5CF6",
+          "icon": "Server",
+          "expanded": true,
+          "children": [
+            {
+              "id": "web-servers",
+              "name": "Web Servers",
+              "parentId": "servers",
+              "color": "#F59E0B",
+              "icon": "Globe",
+              "expanded": true,
+              "children": []
+            },
+            {
+              "id": "db-servers",
+              "name": "Database Servers",
+              "parentId": "servers",
+              "color": "#06B6D4",
+              "icon": "Database",
+              "expanded": true,
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "workstations",
+          "name": "Workstations",
+          "parentId": "root",
+          "color": "#6B7280",
+          "icon": "Monitor",
+          "expanded": true,
+          "children": [
+            {
+              "id": "office-1",
+              "name": "Office Floor 1",
+              "parentId": "workstations",
+              "color": "#84CC16",
+              "icon": "Building",
+              "expanded": true,
+              "children": []
+            },
+            {
+              "id": "office-2",
+              "name": "Office Floor 2",
+              "parentId": "workstations",
+              "color": "#84CC16",
+              "icon": "Building",
+              "expanded": true,
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "printers",
+          "name": "Printers & Peripherals",
+          "parentId": "root",
+          "color": "#F97316",
+          "icon": "Printer",
+          "expanded": true,
+          "children": []
+        },
+        {
+          "id": "mobile",
+          "name": "Mobile Devices",
+          "parentId": "root",
+          "color": "#EC4899",
+          "icon": "Smartphone",
+          "expanded": true,
+          "children": []
+        }
+      ]
+    }
+  ],
+  "devices": [
+    {
+      "id": "router-main",
+      "name": "Main Router",
+      "ip": "192.168.1.1",
+      "mac": "00:1B:44:11:3A:B7",
+      "type": "router",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 2,
+      "uptime": 99.9,
+      "location": "Server Room",
+      "folderId": "core",
+      "vendor": "Cisco",
+      "model": "ISR4331",
+      "monitoring": {
+        "ping": true,
+        "snmp": true,
+        "http": true,
+        "ssh": true
+      },
+      "position": { "x": 400, "y": 200 }
+    },
+    {
+      "id": "switch-core-1",
+      "name": "Core Switch 1",
+      "ip": "192.168.1.10",
+      "mac": "00:1B:44:11:3A:C8",
+      "type": "switch",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 1,
+      "uptime": 99.8,
+      "location": "Server Room",
+      "folderId": "switches",
+      "parentDeviceId": "router-main",
+      "port": 1,
+      "vendor": "Cisco",
+      "model": "Catalyst 2960",
+      "monitoring": {
+        "ping": true,
+        "snmp": true,
+        "http": false,
+        "ssh": true
+      },
+      "position": { "x": 300, "y": 300 }
+    },
+    {
+      "id": "switch-office-1",
+      "name": "Office Switch Floor 1",
+      "ip": "192.168.1.20",
+      "mac": "00:1B:44:11:3A:D9",
+      "type": "switch",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 3,
+      "uptime": 99.5,
+      "location": "Floor 1",
+      "folderId": "switches",
+      "parentDeviceId": "switch-core-1",
+      "port": 12,
+      "vendor": "HP",
+      "model": "ProCurve 2524",
+      "monitoring": {
+        "ping": true,
+        "snmp": true,
+        "http": false,
+        "ssh": false
+      },
+      "position": { "x": 200, "y": 400 }
+    },
+    {
+      "id": "switch-office-2",
+      "name": "Office Switch Floor 2",
+      "ip": "192.168.1.21",
+      "mac": "00:1B:44:11:3A:DA",
+      "type": "switch",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 4,
+      "uptime": 98.9,
+      "location": "Floor 2",
+      "folderId": "switches",
+      "vendor": "HP",
+      "model": "ProCurve 2524",
+      "monitoring": {
+        "ping": true,
+        "snmp": true,
+        "http": false,
+        "ssh": false
+      },
+      "position": { "x": 500, "y": 400 }
+    },
+    {
+      "id": "server-web-1",
+      "name": "Web Server 1",
+      "ip": "192.168.1.100",
+      "mac": "00:1B:44:11:3A:EA",
+      "type": "server",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 5,
+      "uptime": 99.9,
+      "location": "Server Room",
+      "folderId": "web-servers",
+      "vendor": "Dell",
+      "model": "PowerEdge R740",
+      "osVersion": "Ubuntu 22.04",
+      "monitoring": {
+        "ping": true,
+        "snmp": true,
+        "http": true,
+        "ssh": true
+      },
+      "position": { "x": 500, "y": 300 }
+    },
+    {
+      "id": "server-web-2",
+      "name": "Web Server 2",
+      "ip": "192.168.1.101",
+      "mac": "00:1B:44:11:3A:EB",
+      "type": "server",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 6,
+      "uptime": 99.7,
+      "location": "Server Room",
+      "folderId": "web-servers",
+      "vendor": "Dell",
+      "model": "PowerEdge R740",
+      "osVersion": "Ubuntu 22.04",
+      "monitoring": {
+        "ping": true,
+        "snmp": true,
+        "http": true,
+        "ssh": true
+      },
+      "position": { "x": 550, "y": 250 }
+    },
+    {
+      "id": "server-db-1",
+      "name": "Database Server Primary",
+      "ip": "192.168.1.110",
+      "mac": "00:1B:44:11:3A:FB",
+      "type": "server",
+      "status": "warning",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 8,
+      "uptime": 98.5,
+      "location": "Server Room",
+      "folderId": "db-servers",
+      "vendor": "HP",
+      "model": "ProLiant DL380",
+      "osVersion": "Windows Server 2019",
+      "monitoring": {
+        "ping": true,
+        "snmp": true,
+        "http": false,
+        "ssh": false
+      },
+      "position": { "x": 600, "y": 300 }
+    },
+    {
+      "id": "server-db-2",
+      "name": "Database Server Backup",
+      "ip": "192.168.1.111",
+      "mac": "00:1B:44:11:3A:FC",
+      "type": "server",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 7,
+      "uptime": 99.1,
+      "location": "Server Room",
+      "folderId": "db-servers",
+      "vendor": "HP",
+      "model": "ProLiant DL380",
+      "osVersion": "Windows Server 2019",
+      "monitoring": {
+        "ping": true,
+        "snmp": true,
+        "http": false,
+        "ssh": false
+      },
+      "position": { "x": 650, "y": 250 }
+    },
+    {
+      "id": "ws-floor1-01",
+      "name": "Workstation-F1-01",
+      "ip": "192.168.1.201",
+      "mac": "00:1B:44:12:01:01",
+      "type": "workstation",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 12,
+      "uptime": 97.8,
+      "location": "Floor 1 - Desk 1",
+      "folderId": "office-1",
+      "vendor": "Dell",
+      "model": "OptiPlex 7090",
+      "osVersion": "Windows 11",
+      "monitoring": {
+        "ping": true,
+        "snmp": false,
+        "http": false,
+        "ssh": false
+      },
+      "position": { "x": 150, "y": 500 }
+    },
+    {
+      "id": "ws-floor1-02",
+      "name": "Workstation-F1-02",
+      "ip": "192.168.1.202",
+      "mac": "00:1B:44:12:01:02",
+      "type": "workstation",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 15,
+      "uptime": 96.5,
+      "location": "Floor 1 - Desk 2",
+      "folderId": "office-1",
+      "vendor": "HP",
+      "model": "EliteDesk 800",
+      "osVersion": "Windows 11",
+      "monitoring": {
+        "ping": true,
+        "snmp": false,
+        "http": false,
+        "ssh": false
+      },
+      "position": { "x": 200, "y": 500 }
+    },
+    {
+      "id": "ws-floor1-03",
+      "name": "Workstation-F1-03",
+      "ip": "192.168.1.203",
+      "mac": "00:1B:44:12:01:03",
+      "type": "workstation",
+      "status": "offline",
+      "lastSeen": "2024-01-15T09:45:00Z",
+      "responseTime": 0,
+      "uptime": 94.2,
+      "location": "Floor 1 - Desk 3",
+      "folderId": "office-1",
+      "vendor": "Dell",
+      "model": "OptiPlex 7090",
+      "osVersion": "Windows 11",
+      "monitoring": {
+        "ping": true,
+        "snmp": false,
+        "http": false,
+        "ssh": false
+      },
+      "position": { "x": 250, "y": 500 }
+    },
+    {
+      "id": "ws-floor1-04",
+      "name": "Workstation-F1-04",
+      "ip": "192.168.1.204",
+      "mac": "00:1B:44:12:01:04",
+      "type": "workstation",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 18,
+      "uptime": 98.1,
+      "location": "Floor 1 - Desk 4",
+      "folderId": "office-1",
+      "vendor": "Lenovo",
+      "model": "ThinkCentre M90q",
+      "osVersion": "Windows 11",
+      "monitoring": {
+        "ping": true,
+        "snmp": false,
+        "http": false,
+        "ssh": false
+      },
+      "position": { "x": 300, "y": 500 }
+    },
+    {
+      "id": "ws-floor1-05",
+      "name": "Workstation-F1-05",
+      "ip": "192.168.1.205",
+      "mac": "00:1B:44:12:01:05",
+      "type": "workstation",
+      "status": "warning",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 45,
+      "uptime": 89.3,
+      "location": "Floor 1 - Desk 5",
+      "folderId": "office-1",
+      "vendor": "HP",
+      "model": "EliteDesk 800",
+      "osVersion": "Windows 10",
+      "monitoring": {
+        "ping": true,
+        "snmp": false,
+        "http": false,
+        "ssh": false
+      },
+      "position": { "x": 350, "y": 500 }
+    },
+    {
+      "id": "ws-floor2-01",
+      "name": "Workstation-F2-01",
+      "ip": "192.168.1.211",
+      "mac": "00:1B:44:12:02:01",
+      "type": "workstation",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 14,
+      "uptime": 97.2,
+      "location": "Floor 2 - Desk 1",
+      "folderId": "office-2",
+      "vendor": "Dell",
+      "model": "OptiPlex 7090",
+      "osVersion": "Windows 11",
+      "monitoring": {
+        "ping": true,
+        "snmp": false,
+        "http": false,
+        "ssh": false
+      },
+      "position": { "x": 450, "y": 500 }
+    },
+    {
+      "id": "ws-floor2-02",
+      "name": "Workstation-F2-02",
+      "ip": "192.168.1.212",
+      "mac": "00:1B:44:12:02:02",
+      "type": "workstation",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 16,
+      "uptime": 96.8,
+      "location": "Floor 2 - Desk 2",
+      "folderId": "office-2",
+      "vendor": "HP",
+      "model": "EliteDesk 800",
+      "osVersion": "Windows 11",
+      "monitoring": {
+        "ping": true,
+        "snmp": false,
+        "http": false,
+        "ssh": false
+      },
+      "position": { "x": 500, "y": 500 }
+    },
+    {
+      "id": "ws-floor2-03",
+      "name": "Workstation-F2-03",
+      "ip": "192.168.1.213",
+      "mac": "00:1B:44:12:02:03",
+      "type": "workstation",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 13,
+      "uptime": 98.5,
+      "location": "Floor 2 - Desk 3",
+      "folderId": "office-2",
+      "vendor": "Lenovo",
+      "model": "ThinkCentre M90q",
+      "osVersion": "Windows 11",
+      "monitoring": {
+        "ping": true,
+        "snmp": false,
+        "http": false,
+        "ssh": false
+      },
+      "position": { "x": 550, "y": 500 }
+    },
+    {
+      "id": "ws-floor2-04",
+      "name": "Workstation-F2-04",
+      "ip": "192.168.1.214",
+      "mac": "00:1B:44:12:02:04",
+      "type": "workstation",
+      "status": "offline",
+      "lastSeen": "2024-01-15T08:15:00Z",
+      "responseTime": 0,
+      "uptime": 92.1,
+      "location": "Floor 2 - Desk 4",
+      "folderId": "office-2",
+      "vendor": "Dell",
+      "model": "OptiPlex 7090",
+      "osVersion": "Windows 10",
+      "monitoring": {
+        "ping": true,
+        "snmp": false,
+        "http": false,
+        "ssh": false
+      },
+      "position": { "x": 600, "y": 500 }
+    },
+    {
+      "id": "printer-floor1-01",
+      "name": "Printer Floor 1 Main",
+      "ip": "192.168.1.151",
+      "mac": "00:1B:44:15:01:01",
+      "type": "printer",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 25,
+      "uptime": 95.7,
+      "location": "Floor 1 - Print Room",
+      "folderId": "printers",
+      "vendor": "HP",
+      "model": "LaserJet Pro 4301dw",
+      "monitoring": {
+        "ping": true,
+        "snmp": true,
+        "http": true,
+        "ssh": false
+      },
+      "position": { "x": 100, "y": 350 }
+    },
+    {
+      "id": "printer-floor2-01",
+      "name": "Printer Floor 2 Main",
+      "ip": "192.168.1.152",
+      "mac": "00:1B:44:15:02:01",
+      "type": "printer",
+      "status": "warning",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 55,
+      "uptime": 87.3,
+      "location": "Floor 2 - Print Room",
+      "folderId": "printers",
+      "vendor": "Canon",
+      "model": "imageRUNNER ADVANCE C3530i",
+      "monitoring": {
+        "ping": true,
+        "snmp": true,
+        "http": true,
+        "ssh": false
+      },
+      "position": { "x": 700, "y": 350 }
+    },
+    {
+      "id": "printer-color-01",
+      "name": "Color Printer Main",
+      "ip": "192.168.1.153",
+      "mac": "00:1B:44:15:03:01",
+      "type": "printer",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 30,
+      "uptime": 93.2,
+      "location": "Server Room",
+      "folderId": "printers",
+      "vendor": "Xerox",
+      "model": "VersaLink C405",
+      "monitoring": {
+        "ping": true,
+        "snmp": true,
+        "http": true,
+        "ssh": false
+      },
+      "position": { "x": 150, "y": 350 }
+    },
+    {
+      "id": "mobile-tablet-01",
+      "name": "iPad Pro 1",
+      "ip": "192.168.1.181",
+      "mac": "00:1B:44:18:01:01",
+      "type": "mobile",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 8,
+      "uptime": 99.1,
+      "location": "Conference Room A",
+      "folderId": "mobile",
+      "vendor": "Apple",
+      "model": "iPad Pro 12.9",
+      "osVersion": "iPadOS 17",
+      "monitoring": {
+        "ping": true,
+        "snmp": false,
+        "http": false,
+        "ssh": false
+      },
+      "position": { "x": 100, "y": 150 }
+    },
+    {
+      "id": "mobile-tablet-02",
+      "name": "iPad Pro 2",
+      "ip": "192.168.1.182",
+      "mac": "00:1B:44:18:01:02",
+      "type": "mobile",
+      "status": "offline",
+      "lastSeen": "2024-01-15T09:15:00Z",
+      "responseTime": 0,
+      "uptime": 85.4,
+      "location": "Conference Room B",
+      "folderId": "mobile",
+      "vendor": "Apple",
+      "model": "iPad Pro 12.9",
+      "osVersion": "iPadOS 17",
+      "monitoring": {
+        "ping": true,
+        "snmp": false,
+        "http": false,
+        "ssh": false
+      },
+      "position": { "x": 150, "y": 150 }
+    },
+    {
+      "id": "mobile-phone-01",
+      "name": "iPhone 15 Pro",
+      "ip": "192.168.1.183",
+      "mac": "00:1B:44:18:02:01",
+      "type": "mobile",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 5,
+      "uptime": 92.7,
+      "location": "Mobile",
+      "folderId": "mobile",
+      "vendor": "Apple",
+      "model": "iPhone 15 Pro",
+      "osVersion": "iOS 17",
+      "monitoring": {
+        "ping": true,
+        "snmp": false,
+        "http": false,
+        "ssh": false
+      },
+      "position": { "x": 200, "y": 150 }
+    },
+    {
+      "id": "mobile-android-01",
+      "name": "Samsung Galaxy S24",
+      "ip": "192.168.1.184",
+      "mac": "00:1B:44:18:03:01",
+      "type": "mobile",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 7,
+      "uptime": 88.9,
+      "location": "Mobile",
+      "folderId": "mobile",
+      "vendor": "Samsung",
+      "model": "Galaxy S24 Ultra",
+      "osVersion": "Android 14",
+      "monitoring": {
+        "ping": true,
+        "snmp": false,
+        "http": false,
+        "ssh": false
+      },
+      "position": { "x": 250, "y": 150 }
+    },
+    {
+      "id": "laptop-01",
+      "name": "MacBook Pro M3",
+      "ip": "192.168.1.185",
+      "mac": "00:1B:44:18:04:01",
+      "type": "workstation",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 10,
+      "uptime": 94.3,
+      "location": "Mobile",
+      "folderId": "mobile",
+      "vendor": "Apple",
+      "model": "MacBook Pro 16",
+      "osVersion": "macOS Sonoma",
+      "monitoring": {
+        "ping": true,
+        "snmp": false,
+        "http": false,
+        "ssh": true
+      },
+      "position": { "x": 300, "y": 150 }
+    },
+    {
+      "id": "laptop-02",
+      "name": "ThinkPad X1 Carbon",
+      "ip": "192.168.1.186",
+      "mac": "00:1B:44:18:05:01",
+      "type": "workstation",
+      "status": "warning",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 35,
+      "uptime": 91.2,
+      "location": "Mobile",
+      "folderId": "mobile",
+      "vendor": "Lenovo",
+      "model": "ThinkPad X1 Carbon Gen 11",
+      "osVersion": "Windows 11",
+      "monitoring": {
+        "ping": true,
+        "snmp": false,
+        "http": false,
+        "ssh": true
+      },
+      "position": { "x": 350, "y": 150 }
+    },
+    {
+      "id": "ap-floor1-01",
+      "name": "WiFi AP Floor 1 East",
+      "ip": "192.168.1.161",
+      "mac": "00:1B:44:16:01:01",
+      "type": "access_point",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 3,
+      "uptime": 99.5,
+      "location": "Floor 1 - East Wing",
+      "folderId": "core",
+      "vendor": "Ubiquiti",
+      "model": "UniFi AP AC Pro",
+      "monitoring": {
+        "ping": true,
+        "snmp": true,
+        "http": true,
+        "ssh": true
+      },
+      "position": { "x": 250, "y": 350 }
+    },
+    {
+      "id": "ap-floor1-02",
+      "name": "WiFi AP Floor 1 West",
+      "ip": "192.168.1.162",
+      "mac": "00:1B:44:16:01:02",
+      "type": "access_point",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 4,
+      "uptime": 98.8,
+      "location": "Floor 1 - West Wing",
+      "folderId": "core",
+      "vendor": "Ubiquiti",
+      "model": "UniFi AP AC Pro",
+      "monitoring": {
+        "ping": true,
+        "snmp": true,
+        "http": true,
+        "ssh": true
+      },
+      "position": { "x": 450, "y": 350 }
+    },
+    {
+      "id": "ap-floor2-01",
+      "name": "WiFi AP Floor 2 East",
+      "ip": "192.168.1.163",
+      "mac": "00:1B:44:16:02:01",
+      "type": "access_point",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 5,
+      "uptime": 97.9,
+      "location": "Floor 2 - East Wing",
+      "folderId": "core",
+      "vendor": "Ubiquiti",
+      "model": "UniFi AP AC Pro",
+      "monitoring": {
+        "ping": true,
+        "snmp": true,
+        "http": true,
+        "ssh": true
+      },
+      "position": { "x": 550, "y": 350 }
+    },
+    {
+      "id": "firewall-main",
+      "name": "Main Firewall",
+      "ip": "192.168.1.2",
+      "mac": "00:1B:44:11:02:01",
+      "type": "firewall",
+      "status": "online",
+      "lastSeen": "2024-01-15T10:30:00Z",
+      "responseTime": 1,
+      "uptime": 99.9,
+      "location": "Server Room",
+      "folderId": "core",
+      "vendor": "SonicWall",
+      "model": "TZ570",
+      "monitoring": {
+        "ping": true,
+        "snmp": true,
+        "http": true,
+        "ssh": true
+      },
+      "position": { "x": 350, "y": 200 }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn-1",
+      "sourceDeviceId": "router-main",
+      "targetDeviceId": "switch-core-1",
+      "sourcePort": "GigabitEthernet0/0/1",
+      "targetPort": "FastEthernet0/1",
+      "connectionType": "ethernet",
+      "bandwidth": 1000,
+      "status": "active"
+    },
+    {
+      "id": "conn-2",
+      "sourceDeviceId": "switch-core-1",
+      "targetDeviceId": "switch-office-1",
+      "sourcePort": "FastEthernet0/12",
+      "targetPort": "FastEthernet0/24",
+      "connectionType": "ethernet",
+      "bandwidth": 100,
+      "status": "active"
+    },
+    {
+      "id": "conn-3",
+      "sourceDeviceId": "switch-core-1",
+      "targetDeviceId": "server-web-1",
+      "sourcePort": "FastEthernet0/5",
+      "targetPort": "eth0",
+      "connectionType": "ethernet",
+      "bandwidth": 1000,
+      "status": "active"
+    },
+    {
+      "id": "conn-4",
+      "sourceDeviceId": "switch-core-1",
+      "targetDeviceId": "server-db-1",
+      "sourcePort": "FastEthernet0/6",
+      "targetPort": "eth0",
+      "connectionType": "ethernet",
+      "bandwidth": 1000,
+      "status": "active"
+    }
+  ],
+  "config": {
+    "pingInterval": 30,
+    "snmpInterval": 60,
+    "httpTimeout": 5000,
+    "retryAttempts": 3,
+    "alertThresholds": {
+      "responseTime": 100,
+      "packetLoss": 5,
+      "cpuUsage": 80,
+      "memoryUsage": 85,
+      "diskUsage": 90
+    }
+  },
+  "lastBackup": "2024-01-15T10:00:00Z"
+}
