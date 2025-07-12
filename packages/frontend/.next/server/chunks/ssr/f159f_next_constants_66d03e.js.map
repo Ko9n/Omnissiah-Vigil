@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["/turbopack/[project]/node_modules/.pnpm/next@14.2.30_@babel+core@7.28.0_@opentelemetry+api@1.9.0_react-dom@18.3.1_react@18.3.1/node_modules/next/constants.js"],"sourcesContent":["module.exports = require('./dist/shared/lib/constants')\n"],"names":[],"mappings":"AAAA,OAAO,OAAO"}},
+    {"offset": {"line": 5, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"A"}}]
+}

@@ -1,0 +1,212 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Модель устройства для мониторинга
+model Device {
+  id            String   @id @default(cuid())
+  name          String
+  ip            String   @unique
+  type          String   // router, switch, server, etc.
+  location      String?
+  description   String?
+  status        String   @default("unknown") // online, offline, warning
+  responseTime  Int?     @default(0)
+  uptime        Float?   @default(0)
+  folderId      String?
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastSeen      DateTime @default(now())
+  
+  // Relations
+  pingHistory   PingHistory[]
+  folder        DeviceFolder? @relation(fields: [folderId], references: [id])
+  alerts        Alert[]
+  
+  @@map("devices")
+}
+
+// Папки для организации устройств
+model DeviceFolder {
+  id          String   @id @default(cuid())
+  name        String
+  color       String?
+  parentId    String?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  devices     Device[]
+  parent      DeviceFolder? @relation("FolderHierarchy", fields: [parentId], references: [id])
+  children    DeviceFolder[] @relation("FolderHierarchy")
+  
+  @@map("device_folders")
+}
+
+// История пингов устройств
+model PingHistory {
+  id           String   @id @default(cuid())
+  deviceId     String
+  timestamp    DateTime @default(now())
+  isAlive      Boolean
+  responseTime Int?     // in milliseconds
+  packetLoss   String?  // percentage as string "0%"
+  errorMessage String?
+  
+  // Relations
+  device       Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  
+  @@map("ping_history")
+  @@index([deviceId, timestamp])
+}
+
+// Системные метрики сервера мониторинга
+model SystemMetrics {
+  id          String   @id @default(cuid())
+  timestamp   DateTime @default(now())
+  
+  // CPU metrics
+  cpuUsage    Float
+  cpuCores    Int?
+  cpuModel    String?
+  
+  // Memory metrics
+  memoryUsage Float
+  memoryUsed  Float    // GB
+  memoryTotal Float    // GB
+  
+  // Network metrics
+  networkInterfaces Int?
+  totalRx     Float?   // bytes
+  totalTx     Float?   // bytes
+  
+  // Additional metrics
+  uptime      Int?     // seconds
+  temperature Float?   // Celsius
+  processes   Int?
+  
+  @@map("system_metrics")
+  @@index([timestamp])
+}
+
+// Пользователи системы (для будущей аутентификации)
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  password  String   // hashed
+  role      String   @default("viewer") // admin, operator, viewer
+  isActive  Boolean  @default(true)
+  
+  // Profile
+  firstName String?
+  lastName  String?
+  avatar    String?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastLogin DateTime?
+  
+  // Relations
+  sessions  UserSession[]
+  settings  UserSettings?
+  
+  @@map("users")
+}
+
+// Сессии пользователей
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  userAgent String?
+  ipAddress String?
+  
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_sessions")
+  @@index([userId])
+  @@index([token])
+}
+
+// Настройки пользователя
+model UserSettings {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  theme             String   @default("dark") // dark, light, auto
+  language          String   @default("ru")
+  timezone          String   @default("Europe/Moscow")
+  
+  // Notification preferences
+  emailNotifications Boolean  @default(true)
+  pushNotifications  Boolean  @default(true)
+  alertThreshold     Int      @default(5000) // ms
+  
+  // Dashboard preferences
+  refreshInterval    Int      @default(30000) // ms
+  defaultView        String   @default("grid") // grid, list
+  
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_settings")
+}
+
+// Системные настройки приложения
+model AppSettings {
+  id              String   @id @default(cuid())
+  key             String   @unique
+  value           String
+  type            String   @default("string") // string, number, boolean, json
+  description     String?
+  isPublic        Boolean  @default(false) // можно ли читать без авторизации
+  
+  updatedAt       DateTime @updatedAt
+  updatedBy       String?  // userId who updated
+  
+  @@map("app_settings")
+}
+
+// Алерты и уведомления
+model Alert {
+  id          String   @id @default(cuid())
+  type        String   // device_offline, high_response_time, system_error
+  severity    String   // low, medium, high, critical
+  title       String
+  message     String
+  deviceId    String?
+  
+  isResolved  Boolean  @default(false)
+  resolvedAt  DateTime?
+  resolvedBy  String?  // userId
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  device      Device?  @relation(fields: [deviceId], references: [id])
+  
+  @@map("alerts")
+  @@index([createdAt])
+  @@index([deviceId])
+}

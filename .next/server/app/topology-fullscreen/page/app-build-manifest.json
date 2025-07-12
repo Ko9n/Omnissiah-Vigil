@@ -1,0 +1,31 @@
+{
+  "pages": {
+    "/topology-fullscreen/page": [
+      "static/chunks/[root of the server]__33bd1d._.css",
+      "static/chunks/9b6b1_next_af40c7._.js",
+      "static/chunks/e7625_tailwind-merge_dist_bundle-mjs_mjs_b0b136._.js",
+      "static/chunks/ed0bd_@sentry_nextjs_build_esm_aa2a9e._.js",
+      "static/chunks/536ef_@sentry_core_build_esm_60c5e1._.js",
+      "static/chunks/09472_@sentry-internal_browser-utils_build_esm_e18e1b._.js",
+      "static/chunks/eb6b0_@sentry_browser_build_npm_esm_8f3d94._.js",
+      "static/chunks/2dac2_@sentry_react_build_esm_ef206a._.js",
+      "static/chunks/12f3c_@sentry-internal_replay_build_npm_esm_index_d6366f.js",
+      "static/chunks/node_modules__pnpm_7e3b27._.js",
+      "static/chunks/_38fe4c._.js",
+      "static/chunks/app_layout_tsx_241d86._.js",
+      "static/chunks/_611399._.js",
+      "static/chunks/node_modules__pnpm_befbad._.js",
+      "static/chunks/app_topology-fullscreen_page_tsx_87f787._.js",
+      "static/chunks/9b6b1_next_dist_compiled_react_f9cda8._.js",
+      "static/chunks/9b6b1_next_dist_compiled_react-dom_cjs_react-dom_development_9d7e26.js",
+      "static/chunks/9b6b1_next_dist_compiled_react-dom_1d5769._.js",
+      "static/chunks/9b6b1_next_dist_compiled_ac534d._.js",
+      "static/chunks/9b6b1_next_dist_client_b67133._.js",
+      "static/chunks/9b6b1_next_dist_7d63a9._.js",
+      "static/chunks/90481_@swc_helpers_cjs_e55b81._.js",
+      "static/chunks/[turbopack]_dev_client_hmr-client_ts_b2d895._.js",
+      "static/chunks/9b6b1_next_dist_esm_build_templates_app-page_458832.js",
+      "static/chunks/9b6b1_next_dist_esm_build_templates_app-page_638f3c.js"
+    ]
+  }
+}
