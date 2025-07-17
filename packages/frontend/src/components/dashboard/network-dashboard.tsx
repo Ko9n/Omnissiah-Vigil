@@ -43,7 +43,7 @@ export function NetworkDashboard() {
     selectedFolderId,
     sidebarCollapsed,
     rootFolderExpanded,
-    othersExpanded,
+
     useApi,
     apiConnected,
     setSidebarCollapsed,
@@ -58,6 +58,7 @@ export function NetworkDashboard() {
     exportData,
     resetToMockData,
     initializeApi,
+    getFolderExpandedState,
   } = useNetworkStore();
 
   const [deviceModalOpen, setDeviceModalOpen] = useState(false);
@@ -128,7 +129,7 @@ export function NetworkDashboard() {
   const handleDeleteFolder = (folderId: string) => {
     if (
       confirm(
-        'Вы уверены, что хотите удалить эту папку? Все устройства будут перемещены в корневую папку.'
+        'Вы уверены, что хотите удалить эту папку? Устройства из неё будут перемещены в корневые устройства.'
       )
     ) {
       deleteFolder(folderId);
@@ -239,36 +240,21 @@ export function NetworkDashboard() {
               devices={devices}
               selectedFolderId={selectedFolderId}
               rootFolderExpanded={rootFolderExpanded}
-              othersExpanded={othersExpanded}
               onFolderSelect={setSelectedFolder}
               onFolderToggle={(folderId) => {
                 if (folderId === 'root') {
                   updateFolder('root', { expanded: !rootFolderExpanded });
-                } else if (folderId === 'others') {
-                  updateFolder('others', { expanded: !othersExpanded });
                 } else {
-                  // Рекурсивный поиск папки
-                  const findFolder = (folders: any[]): any => {
-                    for (const folder of folders) {
-                      if (folder.id === folderId) return folder;
-                      if (folder.children && folder.children.length > 0) {
-                        const found = findFolder(folder.children);
-                        if (found) return found;
-                      }
-                    }
-                    return null;
-                  };
-
-                  const folder = findFolder(folders);
-                  if (folder) {
-                    updateFolder(folderId, { expanded: !folder.expanded });
-                  }
+                  const isExpanded = getFolderExpandedState(folderId);
+                  updateFolder(folderId, { expanded: !isExpanded });
                 }
               }}
               onAddFolder={handleAddFolder}
               onEditFolder={handleEditFolder}
               onDeleteFolder={handleDeleteFolder}
               onAddDeviceToFolder={handleAddDeviceToFolder}
+              onEditDevice={handleEditDevice}
+              onDeleteDevice={handleDeleteDevice}
             />
           </div>
         )}

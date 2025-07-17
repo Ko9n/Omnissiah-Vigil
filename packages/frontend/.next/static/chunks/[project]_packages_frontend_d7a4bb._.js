@@ -913,15 +913,15 @@ const mockAlerts = [
     }
 ];
 const initialMetrics = {
-    totalDevices: 10,
-    onlineDevices: 8,
-    offlineDevices: 1,
-    warningDevices: 1,
-    averageResponseTime: 6,
-    totalBandwidth: 1000,
-    usedBandwidth: 720,
-    packetLoss: 0.2,
-    networkUptime: 98.7,
+    totalDevices: 0,
+    onlineDevices: 0,
+    offlineDevices: 0,
+    warningDevices: 0,
+    averageResponseTime: 0,
+    totalBandwidth: 0,
+    usedBandwidth: 0,
+    packetLoss: 0,
+    networkUptime: 0,
     lastUpdate: new Date()
 };
 const initialSystemHealth = {
@@ -1053,12 +1053,14 @@ class HttpClient {
         return this.request(url.pathname + url.search);
     }
     async post(endpoint, data) {
+        console.log('🌐 API POST запрос к:', endpoint, 'с данными:', data);
         return this.request(endpoint, {
             method: 'POST',
             body: data ? JSON.stringify(data) : undefined
         });
     }
     async put(endpoint, data) {
+        console.log('🌐 API PUT запрос к:', endpoint, 'с данными:', data);
         return this.request(endpoint, {
             method: 'PUT',
             body: data ? JSON.stringify(data) : undefined
@@ -1093,7 +1095,7 @@ class DevicesApi {
     }
     // Update device
     static async updateDevice(id, updates) {
-        return httpClient.patch(`/devices/${id}`, updates);
+        return httpClient.put(`/devices/${id}`, updates);
     }
     // Delete device
     static async deleteDevice(id) {
@@ -1121,7 +1123,7 @@ class FoldersApi {
     }
     // Update folder
     static async updateFolder(id, updates) {
-        return httpClient.patch(`/folders/${id}`, updates);
+        return httpClient.put(`/folders/${id}`, updates);
     }
     // Delete folder
     static async deleteFolder(id) {
@@ -1276,7 +1278,8 @@ const useNetworkStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node
         loading: false,
         error: null,
         rootFolderExpanded: true,
-        othersExpanded: false,
+        // Локальное состояние раскрытия папок (не отправляется на сервер)
+        folderExpandedState: {},
         // API integration flags
         useApi: true,
         apiConnected: false,
@@ -1284,22 +1287,26 @@ const useNetworkStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node
         webSocketConnected: false,
         // Device actions
         addDevice: async (deviceData)=>{
+            console.log('🏪 Store: addDevice вызван с данными:', deviceData);
             try {
                 const response = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$lib$2f$api$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].devices.createDevice(deviceData);
                 console.log('✅ Устройство создано через API:', response);
                 await get().loadDevices();
             } catch (error) {
+                console.error('❌ Ошибка создания устройства:', error);
                 set({
                     error: 'Ошибка создания устройства через API'
                 });
             }
         },
         updateDevice: async (deviceId, updates)=>{
+            console.log('🏪 Store: updateDevice вызван для ID:', deviceId, 'с данными:', updates);
             try {
                 const response = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$lib$2f$api$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].devices.updateDevice(deviceId, updates);
                 console.log('✅ Устройство обновлено через API:', response);
                 await get().loadDevices();
             } catch (error) {
+                console.error('❌ Ошибка обновления устройства:', error);
                 set({
                     error: 'Ошибка обновления устройства через API'
                 });
@@ -1338,34 +1345,16 @@ const useNetworkStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node
         },
         // Folder actions
         addFolder: async (folderData)=>{
-            const folder = {
-                ...folderData,
-                id: Math.random().toString(36).substr(2, 9),
-                children: []
-            };
-            const addFolderRecursive = (folders)=>{
-                return folders.map((f)=>f.id === (folder.parentId || 'root') ? {
-                        ...f,
-                        children: [
-                            ...f.children,
-                            folder
-                        ]
-                    } : {
-                        ...f,
-                        children: addFolderRecursive(f.children)
-                    });
-            };
-            if (!folder.parentId || folder.parentId === 'root') {
-                set((state)=>({
-                        folders: [
-                            ...state.folders,
-                            folder
-                        ]
-                    }));
-            } else {
-                set((state)=>({
-                        folders: addFolderRecursive(state.folders)
-                    }));
+            console.log('🏪 Store: addFolder вызван с данными:', folderData);
+            try {
+                const response = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$lib$2f$api$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].folders.createFolder(folderData);
+                console.log('✅ Папка создана через API:', response);
+                await get().loadFolders();
+            } catch (error) {
+                console.error('❌ Ошибка создания папки:', error);
+                set({
+                    error: 'Ошибка создания папки через API'
+                });
             }
         },
         updateFolder: async (folderId, updates)=>{
@@ -1376,40 +1365,55 @@ const useNetworkStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node
                     }));
                 return;
             }
-            // Специальная обработка для папки "Иные"
-            if (folderId === 'others') {
+            // Если обновляется только состояние expanded, сохраняем локально
+            if (Object.keys(updates).length === 1 && updates.expanded !== undefined) {
                 set((state)=>({
-                        othersExpanded: updates.expanded !== undefined ? updates.expanded : state.othersExpanded
+                        folderExpandedState: {
+                            ...state.folderExpandedState,
+                            [folderId]: updates.expanded
+                        }
                     }));
                 return;
             }
-            const updateFolderRecursive = (folders)=>{
-                return folders.map((folder)=>folder.id === folderId ? {
-                        ...folder,
-                        ...updates
-                    } : {
-                        ...folder,
-                        children: updateFolderRecursive(folder.children)
-                    });
-            };
-            set((state)=>({
-                    folders: updateFolderRecursive(state.folders)
-                }));
+            // Обновляем через API (только бизнес-данные, не UI состояние)
+            console.log('🏪 Store: updateFolder вызван для папки:', folderId, updates);
+            try {
+                // Исключаем expanded из отправки на сервер
+                const { expanded, ...serverUpdates } = updates;
+                if (Object.keys(serverUpdates).length > 0) {
+                    const response = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$lib$2f$api$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].folders.updateFolder(folderId, serverUpdates);
+                    console.log('✅ Папка обновлена через API:', response);
+                    await get().loadFolders();
+                }
+                // Сохраняем состояние expanded локально
+                if (expanded !== undefined) {
+                    set((state)=>({
+                            folderExpandedState: {
+                                ...state.folderExpandedState,
+                                [folderId]: expanded
+                            }
+                        }));
+                }
+            } catch (error) {
+                console.error('❌ Ошибка обновления папки:', error);
+                set({
+                    error: 'Ошибка обновления папки через API'
+                });
+            }
         },
         deleteFolder: async (folderId)=>{
-            const removeFolderRecursive = (folders)=>{
-                return folders.filter((folder)=>folder.id !== folderId).map((folder)=>({
-                        ...folder,
-                        children: removeFolderRecursive(folder.children)
-                    }));
-            };
-            set((state)=>({
-                    folders: removeFolderRecursive(state.folders),
-                    devices: state.devices.map((device)=>device.folderId === folderId ? {
-                            ...device,
-                            folderId: 'root'
-                        } : device)
-                }));
+            console.log('🏪 Store: deleteFolder вызван для папки:', folderId);
+            try {
+                const response = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$lib$2f$api$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].folders.deleteFolder(folderId);
+                console.log('✅ Папка удалена через API:', response);
+                await get().loadFolders();
+                await get().loadDevices(); // Перезагружаем устройства, т.к. они могли быть перемещены
+            } catch (error) {
+                console.error('❌ Ошибка удаления папки:', error);
+                set({
+                    error: 'Ошибка удаления папки через API'
+                });
+            }
         },
         // Alert actions
         addAlert: (alertData)=>{
@@ -1494,36 +1498,27 @@ const useNetworkStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node
             });
             try {
                 const response = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$lib$2f$api$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].devices.getDevices();
-                console.log('✅ API Response devices:', response);
-                // Проверяем формат ответа API
                 let devices = [];
                 if (response && response.data) {
-                    // Если ответ в формате { data: [], success: true }
                     devices = Array.isArray(response.data) ? response.data : [];
                 } else if (Array.isArray(response)) {
-                    // Если ответ - это просто массив устройств
                     devices = response;
-                } else {
-                    console.warn('Неожиданный формат ответа API, используем моки');
-                    devices = __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$data$2f$mock$2d$data$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["mockDevices"];
                 }
-                console.log('📱 Загружено устройств:', devices.length);
                 set({
-                    devices: devices.length > 0 ? devices : __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$data$2f$mock$2d$data$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["mockDevices"],
+                    devices,
                     loading: false,
                     apiConnected: true,
                     error: null
                 });
-                get().updateMetrics({});
+            // get().updateMetrics({}); // УДАЛЕНО: метрики теперь только из API
             } catch (error) {
-                console.error('❌ API недоступен, используем моковые данные:', error);
                 set({
-                    devices: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$data$2f$mock$2d$data$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["mockDevices"],
+                    devices: [],
                     loading: false,
-                    error: 'API недоступен, показаны демо-данные',
+                    error: 'API недоступен',
                     apiConnected: false
                 });
-                get().updateMetrics({});
+            // get().updateMetrics({}); // УДАЛЕНО: метрики теперь только из API
             }
         },
         loadSystemHealth: async ()=>{
@@ -1567,6 +1562,25 @@ const useNetworkStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node
                 console.error('❌ API недоступен для данных пропускной способности:', error);
                 set({
                     bandwidthHistory: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$data$2f$mock$2d$data$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["initialBandwidthHistory"],
+                    apiConnected: false
+                });
+            }
+        },
+        loadFolders: async ()=>{
+            try {
+                const response = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$lib$2f$api$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].folders.getFolders();
+                console.log('✅ API Response folders:', response);
+                if (response && response.data) {
+                    set({
+                        folders: response.data,
+                        apiConnected: true
+                    });
+                    console.log('📁 Папки загружены с API:', response.data.length);
+                }
+            } catch (error) {
+                console.error('❌ API недоступен для папок:', error);
+                set({
+                    folders: [],
                     apiConnected: false
                 });
             }
@@ -1630,20 +1644,12 @@ const useNetworkStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node
                 error: null
             });
             try {
-                const { useApi } = get();
-                if (useApi) {
-                    // Пробуем загрузить данные с API
-                    await Promise.allSettled([
-                        get().loadDevices(),
-                        get().loadSystemHealth(),
-                        get().loadBandwidthData(),
-                        get().loadNetworkMetrics()
-                    ]);
-                } else {
-                    // Используем моковые данные
-                    await new Promise((resolve)=>setTimeout(resolve, 500));
-                    get().updateMetrics({});
-                }
+                await Promise.allSettled([
+                    get().loadDevices(),
+                    get().loadSystemHealth(),
+                    get().loadBandwidthData(),
+                    get().loadNetworkMetrics()
+                ]);
                 set({
                     loading: false
                 });
@@ -1666,6 +1672,7 @@ const useNetworkStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node
                         useApi: true,
                         apiConnected: true
                     });
+                    await get().loadFolders(); // Загружаем папки
                     await get().refreshData();
                 } else {
                     console.log('❌ API недоступен, используем моковые данные');
@@ -1723,30 +1730,11 @@ const useNetworkStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node
             });
         },
         resetToMockData: ()=>{
-            set({
-                devices: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$data$2f$mock$2d$data$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["mockDevices"],
-                folders: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$data$2f$mock$2d$data$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["mockFolders"],
-                metrics: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$data$2f$mock$2d$data$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["initialMetrics"],
-                bandwidthHistory: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$data$2f$mock$2d$data$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["initialBandwidthHistory"],
-                alerts: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$data$2f$mock$2d$data$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["mockAlerts"],
-                systemHealth: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$data$2f$mock$2d$data$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["initialSystemHealth"],
-                connections: [],
-                selectedFolderId: 'root',
-                loading: false,
-                error: null,
-                rootFolderExpanded: true,
-                othersExpanded: false
-            });
-            get().updateMetrics({});
+        // Отключено: mock-данные больше не используются
         },
         setRootFolderExpanded: (expanded)=>{
             set({
                 rootFolderExpanded: expanded
-            });
-        },
-        setOthersExpanded: (expanded)=>{
-            set({
-                othersExpanded: expanded
             });
         },
         // System log actions
@@ -1783,14 +1771,18 @@ const useNetworkStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node
                         } : device)
                 }));
             get().updateMetrics({});
+        },
+        // Folder UI state helpers
+        getFolderExpandedState: (folderId)=>{
+            const state = get();
+            return state.folderExpandedState[folderId] ?? true; // По умолчанию папки развернуты
         }
     }), {
     name: 'network-monitor-storage',
     partialize: (state)=>({
             selectedFolderId: state.selectedFolderId,
             sidebarCollapsed: state.sidebarCollapsed,
-            rootFolderExpanded: state.rootFolderExpanded,
-            othersExpanded: state.othersExpanded
+            rootFolderExpanded: state.rootFolderExpanded
         })
 })));
 

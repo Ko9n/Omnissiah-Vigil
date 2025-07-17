@@ -249,23 +249,12 @@ export const DevicesSection: React.FC<DevicesSectionProps> = (props) => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
-  // Заглушки для функций которые будут реализованы позже
-  const onAddDevice = () => {
-    warning(
-      'Добавление устройства',
-      'Функция будет реализована в следующей версии'
-    );
-  };
-
-  const onEditDevice = (device: NetworkDevice) => {
-    warning(
-      'Редактирование устройства',
-      `Редактирование ${device.name} будет реализовано в следующей версии`
-    );
-  };
-
   const handleAddDevice = () => {
-    onAddDevice();
+    if (props.onAddDevice) {
+      props.onAddDevice();
+    } else {
+      warning('Добавление устройства', 'Функция добавления не настроена');
+    }
   };
 
   // Filter devices
@@ -289,17 +278,14 @@ export const DevicesSection: React.FC<DevicesSectionProps> = (props) => {
       if (isDeviceSelected) {
         // Если выбрано конкретное устройство, показываем только его
         matchesFolder = device.id === selectedFolderId;
-      } else if (selectedFolderId === 'others') {
-        // Если выбрана папка "Иные", показываем устройства без папки или с folderId = 'root'
-        matchesFolder = !device.folderId || device.folderId === 'root';
       } else {
         // Для конкретной папки показываем только устройства этой папки
         matchesFolder = device.folderId === selectedFolderId;
       }
     } else {
-      // Для корневой папки показываем ВСЕ устройства (включая из вложенных папок)
-      // Это позволяет видеть все устройства сети, как на топологии
-      matchesFolder = true;
+      // Для корневой папки показываем ТОЛЬКО устройства без папки
+      // Чтобы избежать дублирования с устройствами в папках
+      matchesFolder = !device.folderId || device.folderId === 'root';
     }
 
     return matchesSearch && matchesStatus && matchesType && matchesFolder;
@@ -336,8 +322,7 @@ export const DevicesSection: React.FC<DevicesSectionProps> = (props) => {
 
   // Функция для получения названия папки или устройства
   const getFolderName = (folderId: string): string => {
-    if (!folderId || folderId === 'root') return 'Все устройства';
-    if (folderId === 'others') return 'Иные';
+    if (!folderId || folderId === 'root') return 'Корневые устройства';
 
     // Проверяем, не является ли это устройством
     const device = devices.find((d) => d.id === folderId);
@@ -372,23 +357,27 @@ export const DevicesSection: React.FC<DevicesSectionProps> = (props) => {
   ).length;
 
   const handleEditDevice = (deviceId: string) => {
-    const device = devices.find((d) => d.id === deviceId);
-    if (device) {
-      onEditDevice(device);
+    if (props.onEditDevice) {
+      props.onEditDevice(deviceId);
+    } else {
+      const device = devices.find((d) => d.id === deviceId);
+      if (device) {
+        warning(
+          'Редактирование устройства',
+          `Редактирование ${device.name} не настроено`
+        );
+      }
     }
   };
 
   const handleDeleteDevice = (deviceId: string) => {
-    const device = devices.find((d) => d.id === deviceId);
-    if (
-      device &&
-      confirm(`Вы уверены, что хотите удалить устройство "${device.name}"?`)
-    ) {
-      // Assuming deleteDevice is available in useNetworkStore or needs to be imported
-      // For now, using console.log as a placeholder
-      console.log('Удаление устройства', `Удаление устройства: ${device.name}`);
-      // Example: deleteDevice(deviceId);
-      alert('Устройство успешно удалено');
+    if (props.onDeleteDevice) {
+      props.onDeleteDevice(deviceId);
+    } else {
+      const device = devices.find((d) => d.id === deviceId);
+      if (device) {
+        warning('Удаление устройства', `Удаление ${device.name} не настроено`);
+      }
     }
   };
 
@@ -411,19 +400,14 @@ export const DevicesSection: React.FC<DevicesSectionProps> = (props) => {
               onClick={async () => {
                 const { pingDevice } = useNetworkStore.getState();
                 try {
-                  // Assuming success and error are defined elsewhere or need to be imported
-                  // For now, using console.log as a placeholder
-                  console.log(
-                    'Массовый ping',
-                    'Запускается ping всех устройств...'
-                  );
+                  info('Массовый ping', 'Запускается ping всех устройств...');
                   const promises = devices.map((device) =>
                     pingDevice(device.id)
                   );
                   await Promise.all(promises);
-                  console.log('Ping завершен', 'Все устройства проверены');
-                } catch (error) {
-                  console.error(
+                  success('Ping завершен', 'Все устройства проверены');
+                } catch (err) {
+                  error(
                     'Ошибка ping',
                     'Не удалось выполнить ping некоторых устройств'
                   );
@@ -436,15 +420,21 @@ export const DevicesSection: React.FC<DevicesSectionProps> = (props) => {
             </button>
 
             <button
-              onClick={() => {
+              onClick={async () => {
                 const { loadDevices } = useNetworkStore.getState();
-                loadDevices();
-                // Assuming info is defined elsewhere or needs to be imported
-                // For now, using console.log as a placeholder
-                console.log(
-                  'Обновление',
-                  'Загружаются актуальные данные устройств...'
-                );
+                try {
+                  info(
+                    'Обновление',
+                    'Загружаются актуальные данные устройств...'
+                  );
+                  await loadDevices();
+                  success('Обновление завершено', 'Данные устройств обновлены');
+                } catch (err) {
+                  error(
+                    'Ошибка обновления',
+                    'Не удалось загрузить данные устройств'
+                  );
+                }
               }}
               className="flex items-center space-x-2 rounded-lg bg-slate-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700"
             >
@@ -453,14 +443,7 @@ export const DevicesSection: React.FC<DevicesSectionProps> = (props) => {
             </button>
 
             <button
-              onClick={() => {
-                // Assuming warning is defined elsewhere or needs to be imported
-                // For now, using console.log as a placeholder
-                console.warn(
-                  'Добавление устройства',
-                  'Функция будет реализована в следующей версии'
-                );
-              }}
+              onClick={handleAddDevice}
               className="flex items-center space-x-2 rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700"
             >
               <span>➕</span>

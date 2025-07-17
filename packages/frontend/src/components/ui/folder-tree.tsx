@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { DeviceFolder, NetworkDevice } from '@/types/schemas';
+import { useNetworkStore } from '@/store/network-store';
 import {
   ChevronRight,
   ChevronDown,
@@ -27,13 +28,15 @@ interface FolderTreeProps {
   devices: NetworkDevice[];
   selectedFolderId?: string;
   rootFolderExpanded: boolean;
-  othersExpanded: boolean;
+
   onFolderSelect: (folderId: string) => void;
   onFolderToggle: (folderId: string) => void;
   onAddFolder: (parentId: string) => void;
   onEditFolder: (folderId: string) => void;
   onDeleteFolder: (folderId: string) => void;
   onAddDeviceToFolder: (folderId: string) => void;
+  onEditDevice?: (deviceId: string) => void;
+  onDeleteDevice?: (deviceId: string) => void;
 }
 
 const iconMap = {
@@ -54,24 +57,36 @@ export function FolderTree({
   devices,
   selectedFolderId,
   rootFolderExpanded,
-  othersExpanded,
   onFolderSelect,
   onFolderToggle,
   onAddFolder,
   onEditFolder,
   onDeleteFolder,
   onAddDeviceToFolder,
+  onEditDevice,
+  onDeleteDevice,
 }: FolderTreeProps) {
+  const getFolderExpandedState = useNetworkStore(
+    (state) => state.getFolderExpandedState
+  );
   const getDeviceCount = (folderId: string): number => {
     if (folderId === 'root') {
-      return devices.length; // Для корневой папки показываем все устройства
+      // Корневая папка показывает только устройства БЕЗ папки
+      return devices.filter(
+        (device) => !device.folderId || device.folderId === 'root'
+      ).length;
     }
     return devices.filter((device) => device.folderId === folderId).length;
   };
 
   const getOnlineDeviceCount = (folderId: string): number => {
     if (folderId === 'root') {
-      return devices.filter((device) => device.status === 'online').length;
+      // Корневая папка показывает только устройства БЕЗ папки
+      return devices.filter(
+        (device) =>
+          (!device.folderId || device.folderId === 'root') &&
+          device.status === 'online'
+      ).length;
     }
     return devices.filter(
       (device) => device.folderId === folderId && device.status === 'online'
@@ -86,6 +101,7 @@ export function FolderTree({
     );
     const hasDevices = folderDevices.length > 0;
     const shouldExpand = hasChildren || hasDevices;
+    const isExpanded = getFolderExpandedState(folder.id);
 
     if (selectedFolderId === folder.id) {
       // Если папка уже выбрана, только переключаем её состояние (развернуть/свернуть)
@@ -95,7 +111,7 @@ export function FolderTree({
     } else {
       // Если папка не выбрана, выбираем её и разворачиваем (если есть содержимое)
       onFolderSelect(folder.id);
-      if (shouldExpand && !folder.expanded) {
+      if (shouldExpand && !isExpanded) {
         onFolderToggle(folder.id);
       }
     }
@@ -194,7 +210,9 @@ export function FolderTree({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                console.log('Edit device:', device.id);
+                if (onEditDevice) {
+                  onEditDevice(device.id);
+                }
               }}
               className="rounded p-1 text-slate-400 hover:bg-slate-600/50 hover:text-white"
               title="Редактировать устройство"
@@ -204,7 +222,9 @@ export function FolderTree({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                console.log('Delete device:', device.id);
+                if (onDeleteDevice) {
+                  onDeleteDevice(device.id);
+                }
               }}
               className="rounded p-1 text-slate-400 hover:bg-slate-600/50 hover:text-red-400"
               title="Удалить устройство"
@@ -227,7 +247,10 @@ export function FolderTree({
       (device) => device.folderId === folder.id
     );
     const hasDevices = folderDevices.length > 0;
-    const shouldShowExpandButton = hasChildren || hasDevices;
+    // Папки ВСЕГДА должны иметь кнопку expand (кроме возможно пустых, но лучше показывать всегда)
+    const shouldShowExpandButton = true;
+    // Используем локальное состояние раскрытия вместо folder.expanded
+    const isExpanded = getFolderExpandedState(folder.id);
 
     return (
       <div key={folder.id} className="select-none">
@@ -268,13 +291,13 @@ export function FolderTree({
                     'Toggle folder:',
                     folder.id,
                     'current expanded:',
-                    folder.expanded
+                    isExpanded
                   );
                   onFolderToggle(folder.id);
                 }}
                 className="rounded p-1 hover:bg-slate-600/50"
               >
-                {folder.expanded ? (
+                {isExpanded ? (
                   <ChevronDown className="h-4 w-4 text-slate-400" />
                 ) : (
                   <ChevronRight className="h-4 w-4 text-slate-400" />
@@ -290,7 +313,7 @@ export function FolderTree({
                 color: folder.color,
               }}
             >
-              {folder.expanded && shouldShowExpandButton ? (
+              {isExpanded && shouldShowExpandButton ? (
                 <FolderOpen className="h-4 w-4" />
               ) : (
                 <IconComponent className="h-4 w-4" />
@@ -367,7 +390,7 @@ export function FolderTree({
           </div>
         </div>
 
-        {folder.expanded && (
+        {isExpanded && (
           <div className="mt-1">
             {/* Подпапки */}
             {hasChildren &&
@@ -376,7 +399,7 @@ export function FolderTree({
               )}
 
             {/* Устройства в этой папке */}
-            {hasDevices &&
+            {folderDevices.length > 0 &&
               folderDevices.map((device) => renderDevice(device, level + 1))}
           </div>
         )}
@@ -387,8 +410,8 @@ export function FolderTree({
   // Создаем виртуальную корневую папку
   const rootFolder: DeviceFolder = {
     id: 'root',
-    name: 'Все устройства',
-    description: 'Все устройства сети',
+    name: 'Корневые устройства',
+    description: 'Устройства без папки',
     parentId: undefined,
     color: '#3B82F6',
     icon: 'Network',
@@ -401,7 +424,7 @@ export function FolderTree({
 
   return (
     <div className="space-y-1">
-      {/* Корневая папка "Все устройства" */}
+      {/* Корневая папка "Корневые устройства" */}
       <div className="select-none">
         <div
           className={`group flex cursor-pointer items-center justify-between rounded-lg p-2 transition-all duration-200 ${
@@ -447,16 +470,20 @@ export function FolderTree({
             <div className="flex-1">
               <div className="flex items-center space-x-2">
                 <span className="text-sm font-medium text-white">
-                  Все устройства
+                  Корневые устройства
                 </span>
                 <div className="flex items-center space-x-1 text-xs">
-                  <span className="text-green-400">{totalOnline}</span>
+                  <span className="text-green-400">
+                    {getOnlineDeviceCount('root')}
+                  </span>
                   <span className="text-slate-500">/</span>
-                  <span className="text-slate-400">{totalDevices}</span>
+                  <span className="text-slate-400">
+                    {getDeviceCount('root')}
+                  </span>
                 </div>
               </div>
               <p className="truncate text-xs text-slate-500">
-                Все устройства сети
+                Устройства без папки
               </p>
             </div>
           </div>
@@ -485,147 +512,20 @@ export function FolderTree({
           </div>
         </div>
 
-        {/* Вложенные папки и папка "Иные" */}
+        {/* Корневые устройства и папки */}
         {rootFolder.expanded && (
           <div className="mt-1">
-            {folders.map((folder) => renderFolder(folder, 1))}
-
-            {/* Папка "Иные" для устройств без категории */}
+            {/* СНАЧАЛА корневые устройства (ТОЛЬКО без папки) */}
             {(() => {
-              const uncategorizedDevices = devices.filter(
+              const rootDevices = devices.filter(
                 (device) => !device.folderId || device.folderId === 'root'
               );
 
-              if (uncategorizedDevices.length === 0) return null;
-
-              const othersFolder: DeviceFolder = {
-                id: 'others',
-                name: 'Иные',
-                description: 'Устройства без категории',
-                parentId: 'root',
-                color: '#6B7280',
-                icon: 'Folder',
-                expanded: othersExpanded,
-                children: [],
-              };
-
-              return (
-                <div key="others" className="select-none">
-                  <div
-                    className={`group flex cursor-pointer items-center justify-between rounded-lg p-2 transition-all duration-200 ${
-                      selectedFolderId === 'others'
-                        ? 'border border-blue-500/30 bg-blue-500/20'
-                        : 'hover:bg-slate-700/50'
-                    }`}
-                    style={{ paddingLeft: '28px' }}
-                    onClick={() => {
-                      console.log('Others folder clicked');
-                      onFolderSelect('others');
-                      if (!othersFolder.expanded) {
-                        onFolderToggle('others');
-                      }
-                    }}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.currentTarget.classList.add('bg-blue-500/10');
-                    }}
-                    onDragLeave={(e) => {
-                      e.currentTarget.classList.remove('bg-blue-500/10');
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      e.currentTarget.classList.remove('bg-blue-500/10');
-                      const deviceId = e.dataTransfer.getData('device-id');
-                      if (deviceId) {
-                        console.log(
-                          'Moving device',
-                          deviceId,
-                          'to others folder'
-                        );
-                        // TODO: Implement device move to others
-                      }
-                    }}
-                  >
-                    <div className="flex flex-1 items-center space-x-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onFolderToggle('others');
-                        }}
-                        className="rounded p-1 hover:bg-slate-600/50"
-                      >
-                        {othersFolder.expanded ? (
-                          <ChevronDown className="h-4 w-4 text-slate-400" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4 text-slate-400" />
-                        )}
-                      </button>
-
-                      <div
-                        className="rounded-lg border p-1.5"
-                        style={{
-                          backgroundColor: '#6B728020',
-                          borderColor: '#6B728040',
-                          color: '#6B7280',
-                        }}
-                      >
-                        {othersFolder.expanded ? (
-                          <FolderOpen className="h-4 w-4" />
-                        ) : (
-                          <Folder className="h-4 w-4" />
-                        )}
-                      </div>
-
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium text-white">
-                            Иные
-                          </span>
-                          <div className="flex items-center space-x-1 text-xs">
-                            <span className="text-green-400">
-                              {
-                                uncategorizedDevices.filter(
-                                  (d) => d.status === 'online'
-                                ).length
-                              }
-                            </span>
-                            <span className="text-slate-500">/</span>
-                            <span className="text-slate-400">
-                              {uncategorizedDevices.length}
-                            </span>
-                          </div>
-                        </div>
-                        <p className="truncate text-xs text-slate-500">
-                          Устройства без категории
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-1 opacity-0 transition-opacity group-hover:opacity-100">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onAddDeviceToFolder('others');
-                        }}
-                        className="rounded p-1 text-slate-400 hover:bg-slate-600/50 hover:text-green-400"
-                        title="Добавить устройство в эту папку"
-                      >
-                        <Monitor className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Устройства в папке "Иные" */}
-                  {othersFolder.expanded && (
-                    <div className="mt-1">
-                      {uncategorizedDevices.map((device) =>
-                        renderDevice(device, 2)
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
+              return rootDevices.map((device) => renderDevice(device, 1));
             })()}
+
+            {/* ПОТОМ все папки */}
+            {folders.map((folder) => renderFolder(folder, 1))}
           </div>
         )}
       </div>

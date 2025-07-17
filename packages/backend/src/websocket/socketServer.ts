@@ -1,6 +1,51 @@
 import { Server as SocketIOServer } from "socket.io";
 import { Server } from "http";
 import * as ping from "ping";
+import prisma from "../utils/prisma";
+import { exec } from "child_process";
+import { promisify } from "util";
+import net from "net";
+
+const execAsync = promisify(exec);
+
+// Функция проверки через системный ping
+const systemPing = async (
+  host: string
+): Promise<{ alive: boolean; time: number; error?: string }> => {
+  try {
+    const isWindows = process.platform === "win32";
+    const command = isWindows
+      ? `ping -n 1 -w 3000 ${host}`
+      : `ping -c 1 -W 3 ${host}`;
+
+    const { stdout, stderr } = await execAsync(command);
+
+    if (stderr) {
+      return { alive: false, time: 0, error: stderr };
+    }
+
+    // Парсим время отклика
+    const timeMatch = isWindows
+      ? stdout.match(/время[=<]\s*(\d+)мс/i) ||
+        stdout.match(/time[=<]\s*(\d+)ms/i)
+      : stdout.match(/time=(\d+\.?\d*)/);
+
+    const time = timeMatch && timeMatch[1] ? parseInt(timeMatch[1]) : 0;
+    const isAlive =
+      !stdout.includes("недостижим") &&
+      !stdout.includes("unreachable") &&
+      !stdout.includes("Превышен интервал") &&
+      !stdout.includes("timeout");
+
+    return { alive: isAlive, time };
+  } catch (error) {
+    return {
+      alive: false,
+      time: 0,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+};
 
 export interface RealtimeMetrics {
   timestamp: string;
@@ -48,7 +93,22 @@ export class SocketServer {
       },
     });
 
+    // Загружаем устройства из базы при старте
+    this.loadDevicesFromDB();
+
     this.setupSocketHandlers();
+  }
+
+  private async loadDevicesFromDB() {
+    try {
+      this.devices = await prisma.device.findMany();
+      console.log(
+        `🔄 WebSocket: загружено устройств из БД: ${this.devices.length}`
+      );
+    } catch (error) {
+      console.error("❌ WebSocket: ошибка загрузки устройств из БД:", error);
+      this.devices = [];
+    }
   }
 
   private setupSocketHandlers() {
@@ -136,20 +196,81 @@ export class SocketServer {
     const deviceMetrics = await Promise.all(
       this.devices.map(async (device) => {
         try {
-          const result = await ping.promise.probe(device.ip, {
-            timeout: 3,
-            extra: ["-c", "1"],
-          });
+          // Пробуем сначала системный ping, затем Node.js ping
+          let result = await systemPing(device.ip);
+
+          if (!result.alive) {
+            // Если системный ping не сработал, пробуем Node.js ping
+            try {
+              const nodePingResult = await ping.promise.probe(device.ip, {
+                timeout: 3,
+                extra: ["-c", "1"],
+              });
+              if (nodePingResult.alive) {
+                result = {
+                  alive: true,
+                  time: Math.round(nodePingResult.time || 0),
+                };
+              }
+            } catch (nodePingError) {
+              console.log(
+                `⚠️ Node.js ping также не сработал для ${device.name}`
+              );
+            }
+          }
+
+          const status = result.alive
+            ? ("online" as const)
+            : ("offline" as const);
+          const responseTime = result.time || 0;
+
+          // Обновляем статус устройства в БД
+          try {
+            await prisma.device.update({
+              where: { id: device.id },
+              data: {
+                status,
+                responseTime,
+              },
+            });
+          } catch (dbError) {
+            console.error(
+              `❌ Ошибка обновления устройства ${device.name} в БД:`,
+              dbError
+            );
+          }
+
+          console.log(
+            `🔍 ${device.name} (${device.ip}): ${status} - ${responseTime}ms`
+          );
 
           return {
             deviceId: device.id,
             deviceName: device.name,
             ip: device.ip,
-            status: result.alive ? ("online" as const) : ("offline" as const),
-            responseTime: Math.round(result.time || 0),
-            packetLoss: result.packetLoss || "0%",
+            status,
+            responseTime,
+            packetLoss: result.alive ? "0%" : "100%",
           };
         } catch (error) {
+          // Обновляем статус как offline в БД при ошибке ping
+          try {
+            await prisma.device.update({
+              where: { id: device.id },
+              data: {
+                status: "offline",
+                responseTime: 0,
+              },
+            });
+          } catch (dbError) {
+            console.error(
+              `❌ Ошибка обновления устройства ${device.name} в БД:`,
+              dbError
+            );
+          }
+
+          console.log(`❌ ${device.name} (${device.ip}): ОШИБКА ПРОВЕРКИ`);
+
           return {
             deviceId: device.id,
             deviceName: device.name,
@@ -244,6 +365,8 @@ export class SocketServer {
 
     console.log("🚀 Запуск мониторинга в реальном времени (интервал: 30 сек)");
     this.monitoringInterval = setInterval(async () => {
+      // Обновляем список устройств из БД перед каждым циклом мониторинга
+      await this.loadDevicesFromDB();
       await this.sendCurrentMetrics();
     }, 30000); // Каждые 30 секунд
 

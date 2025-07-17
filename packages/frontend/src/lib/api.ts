@@ -134,6 +134,7 @@ class HttpClient {
   }
 
   async post<T>(endpoint: string, data?: any): Promise<T> {
+    console.log('🌐 API POST запрос к:', endpoint, 'с данными:', data);
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
@@ -141,6 +142,7 @@ class HttpClient {
   }
 
   async put<T>(endpoint: string, data?: any): Promise<T> {
+    console.log('🌐 API PUT запрос к:', endpoint, 'с данными:', data);
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
@@ -195,7 +197,7 @@ export class DevicesApi {
     id: string,
     updates: Partial<NetworkDevice>
   ): Promise<ApiResponse<NetworkDevice>> {
-    return httpClient.patch<ApiResponse<NetworkDevice>>(
+    return httpClient.put<ApiResponse<NetworkDevice>>(
       `/devices/${id}`,
       updates
     );
@@ -245,10 +247,7 @@ export class FoldersApi {
     id: string,
     updates: Partial<DeviceFolder>
   ): Promise<ApiResponse<DeviceFolder>> {
-    return httpClient.patch<ApiResponse<DeviceFolder>>(
-      `/folders/${id}`,
-      updates
-    );
+    return httpClient.put<ApiResponse<DeviceFolder>>(`/folders/${id}`, updates);
   }
 
   // Delete folder

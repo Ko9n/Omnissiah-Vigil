@@ -1,4 +1,9 @@
-import { NetworkData, NetworkDevice, DeviceFolder, SystemHealth } from '../types/network';
+import {
+  NetworkData,
+  NetworkDevice,
+  DeviceFolder,
+  SystemHealth,
+} from '../types/network';
 import networkDataJson from '../data/networkData.json';
 
 class DataService {
@@ -16,28 +21,28 @@ class DataService {
         throw new Error('Failed to fetch network data');
       }
       const data = await response.json();
-      
+
       // Преобразуем строки дат в объекты Date
       if (data.devices) {
         data.devices = data.devices.map((device: any) => ({
           ...device,
-          lastSeen: device.lastSeen ? new Date(device.lastSeen) : new Date()
+          lastSeen: device.lastSeen ? new Date(device.lastSeen) : new Date(),
         }));
       }
-      
+
       this.networkData = data as NetworkData;
     } catch (error) {
       console.error('Error loading data:', error);
       // Fallback to local data with date conversion
       const localData = { ...networkDataJson };
-      
+
       if (localData.devices) {
         localData.devices = localData.devices.map((device: any) => ({
           ...device,
-          lastSeen: device.lastSeen ? new Date(device.lastSeen) : new Date()
+          lastSeen: device.lastSeen ? new Date(device.lastSeen) : new Date(),
         }));
       }
-      
+
       this.networkData = localData as unknown as NetworkData;
     }
   }
@@ -56,7 +61,9 @@ class DataService {
   }
 
   getDevicesByFolder(folderId: string): NetworkDevice[] {
-    return this.networkData.devices.filter(device => device.folderId === folderId);
+    return this.networkData.devices.filter(
+      (device) => device.folderId === folderId
+    );
   }
 
   addDevice(device: NetworkDevice) {
@@ -65,18 +72,22 @@ class DataService {
   }
 
   updateDevice(deviceId: string, updates: Partial<NetworkDevice>) {
-    const deviceIndex = this.networkData.devices.findIndex(d => d.id === deviceId);
+    const deviceIndex = this.networkData.devices.findIndex(
+      (d) => d.id === deviceId
+    );
     if (deviceIndex !== -1) {
-      this.networkData.devices[deviceIndex] = { 
-        ...this.networkData.devices[deviceIndex], 
-        ...updates 
+      this.networkData.devices[deviceIndex] = {
+        ...this.networkData.devices[deviceIndex],
+        ...updates,
       };
       this.saveData();
     }
   }
 
   deleteDevice(deviceId: string) {
-    this.networkData.devices = this.networkData.devices.filter(d => d.id !== deviceId);
+    this.networkData.devices = this.networkData.devices.filter(
+      (d) => d.id !== deviceId
+    );
     this.saveData();
   }
 
@@ -85,7 +96,10 @@ class DataService {
     return this.networkData.folders;
   }
 
-  findFolderById(folderId: string, folders: DeviceFolder[] = this.networkData.folders): DeviceFolder | null {
+  findFolderById(
+    folderId: string,
+    folders: DeviceFolder[] = this.networkData.folders
+  ): DeviceFolder | null {
     for (const folder of folders) {
       if (folder.id === folderId) {
         return folder;
@@ -117,7 +131,7 @@ class DataService {
       for (let i = 0; i < folders.length; i++) {
         if (folders[i].id === folderId) {
           // Move devices to root folder before deleting
-          this.networkData.devices.forEach(device => {
+          this.networkData.devices.forEach((device) => {
             if (device.folderId === folderId) {
               device.folderId = 'root';
             }
@@ -138,7 +152,7 @@ class DataService {
   }
   updateFolder(folderId: string, updates: Partial<DeviceFolder>) {
     const updateFolderRecursive = (folders: DeviceFolder[]): boolean => {
-      for (let folder of folders) {
+      for (const folder of folders) {
         if (folder.id === folderId) {
           Object.assign(folder, updates);
           return true;
@@ -168,46 +182,53 @@ class DataService {
           temperature: 30 + Math.random() * 40,
           processes: Math.floor(Math.random() * 200) + 50,
           uptime: Math.random() * 30 * 24 * 60 * 60, // up to 30 days in seconds
-          lastUpdate: new Date()
+          lastUpdate: new Date(),
         });
       }, 100);
     });
   }
 
   // Device monitoring simulation
-  async pingDevice(deviceId: string): Promise<{ success: boolean; responseTime: number }> {
-    const device = this.networkData.devices.find(d => d.id === deviceId);
+  async pingDevice(
+    deviceId: string
+  ): Promise<{ success: boolean; responseTime: number }> {
+    const device = this.networkData.devices.find((d) => d.id === deviceId);
     if (!device) {
       return { success: false, responseTime: 0 };
     }
 
     // Simulate ping based on device status
     return new Promise((resolve) => {
-      setTimeout(() => {
-        const success = device.status === 'online' || (device.status === 'warning' && Math.random() > 0.3);
-        const responseTime = success ? Math.random() * 50 + 1 : 0;
-        
-        if (success) {
-          this.updateDevice(deviceId, { 
-            responseTime: Math.round(responseTime),
-            lastSeen: new Date(),
-            status: responseTime > 30 ? 'warning' : 'online'
-          });
-        } else {
-          this.updateDevice(deviceId, { 
-            status: 'offline',
-            responseTime: 0
-          });
-        }
+      setTimeout(
+        () => {
+          const success =
+            device.status === 'online' ||
+            (device.status === 'warning' && Math.random() > 0.3);
+          const responseTime = success ? Math.random() * 50 + 1 : 0;
 
-        resolve({ success, responseTime: Math.round(responseTime) });
-      }, Math.random() * 1000 + 100);
+          if (success) {
+            this.updateDevice(deviceId, {
+              responseTime: Math.round(responseTime),
+              lastSeen: new Date(),
+              status: responseTime > 30 ? 'warning' : 'online',
+            });
+          } else {
+            this.updateDevice(deviceId, {
+              status: 'offline',
+              responseTime: 0,
+            });
+          }
+
+          resolve({ success, responseTime: Math.round(responseTime) });
+        },
+        Math.random() * 1000 + 100
+      );
     });
   }
 
   // SNMP data simulation
   async getSnmpData(deviceId: string): Promise<any> {
-    const device = this.networkData.devices.find(d => d.id === deviceId);
+    const device = this.networkData.devices.find((d) => d.id === deviceId);
     if (!device || !device.monitoring.snmp) {
       return null;
     }
@@ -221,7 +242,7 @@ class DataService {
           ifInOctets: Math.floor(Math.random() * 1000000),
           ifOutOctets: Math.floor(Math.random() * 1000000),
           cpuUsage: Math.random() * 100,
-          memoryUsage: Math.random() * 100
+          memoryUsage: Math.random() * 100,
         });
       }, 200);
     });
@@ -248,10 +269,12 @@ class DataService {
   createBackup(): void {
     const backup = {
       ...this.networkData,
-      backupDate: new Date().toISOString()
+      backupDate: new Date().toISOString(),
     };
-    
-    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {
+      type: 'application/json',
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as si from "systeminformation";
+import prisma from "../utils/prisma";
 
 // GET /api/metrics/system - получить здоровье системы
 export const getSystemHealth = async (req: Request, res: Response) => {
@@ -97,16 +98,31 @@ export const getNetworkStats = async (req: Request, res: Response) => {
   try {
     console.log("🌐 Запрос статистики сети");
 
-    // Здесь будет реальная статистика сети
+    // Получаем все устройства из базы
+    const devices = await prisma.device.findMany();
+    const totalDevices = devices.length;
+    const onlineDevices = devices.filter((d) => d.status === "online").length;
+    const offlineDevices = devices.filter((d) => d.status === "offline").length;
+    const warningDevices = devices.filter((d) => d.status === "warning").length;
+    const averageResponseTime =
+      totalDevices > 0
+        ? Math.round(
+            (devices.reduce((sum, d) => sum + (d.responseTime || 0), 0) /
+              totalDevices) *
+              10
+          ) / 10
+        : 0;
+
+    // networkUptime, totalPackets, errorPackets — временно оставляем mock или считаем по необходимости
     const networkStats = {
-      totalDevices: 9,
-      onlineDevices: 7,
-      offlineDevices: 1,
-      warningDevices: 1,
-      averageResponseTime: 5.2,
-      networkUptime: 99.8,
-      totalPackets: 1234567,
-      errorPackets: 23,
+      totalDevices,
+      onlineDevices,
+      offlineDevices,
+      warningDevices,
+      averageResponseTime,
+      networkUptime: 99.8, // TODO: вычислять по истории пингов
+      totalPackets: 1234567, // TODO: вычислять по истории
+      errorPackets: 23, // TODO: вычислять по истории
       timestamp: new Date().toISOString(),
     };
 

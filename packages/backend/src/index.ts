@@ -9,6 +9,7 @@ import dotenv from "dotenv";
 import deviceRoutes from "./routes/devices";
 import metricsRoutes from "./routes/metrics";
 import systemRoutes from "./routes/system";
+import folderRoutes from "./routes/folders";
 
 // Import WebSocket server
 import { SocketServer } from "./websocket/socketServer";
@@ -35,6 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/devices", deviceRoutes);
 app.use("/api/metrics", metricsRoutes);
 app.use("/api/system", systemRoutes);
+app.use("/api/folders", folderRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

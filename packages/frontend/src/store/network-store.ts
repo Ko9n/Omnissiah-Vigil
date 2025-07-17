@@ -47,7 +47,8 @@ interface NetworkStore {
   loading: boolean;
   error: string | null;
   rootFolderExpanded: boolean;
-  othersExpanded: boolean;
+  // Локальное состояние раскрытия папок (не отправляется на сервер)
+  folderExpandedState: Record<string, boolean>;
 
   // API integration flags
   useApi: boolean;
@@ -92,12 +93,16 @@ interface NetworkStore {
     updates: Partial<NetworkDevice>
   ) => void;
 
+  // Folder UI state helpers
+  getFolderExpandedState: (folderId: string) => boolean;
+
   // Data actions
   setBandwidthData: (data: BandwidthData[]) => void;
   addBandwidthData: (data: BandwidthData) => void;
   updateSystemHealth: (health: SystemHealth) => void;
   updateMetrics: (metrics: Partial<NetworkMetrics>) => void;
   loadDevices: () => Promise<void>;
+  loadFolders: () => Promise<void>;
   loadSystemHealth: () => Promise<void>;
   loadBandwidthData: () => Promise<void>;
   loadNetworkMetrics: () => Promise<void>;
@@ -116,7 +121,7 @@ interface NetworkStore {
   resetData: () => void;
   resetToMockData: () => void;
   setRootFolderExpanded: (expanded: boolean) => void;
-  setOthersExpanded: (expanded: boolean) => void;
+
   initializeApi: () => Promise<void>;
 }
 
@@ -141,7 +146,8 @@ export const useNetworkStore = create<NetworkStore>()(
         loading: false,
         error: null,
         rootFolderExpanded: true,
-        othersExpanded: false,
+        // Локальное состояние раскрытия папок (не отправляется на сервер)
+        folderExpandedState: {},
 
         // API integration flags
         useApi: true,
@@ -152,20 +158,29 @@ export const useNetworkStore = create<NetworkStore>()(
 
         // Device actions
         addDevice: async (deviceData) => {
+          console.log('🏪 Store: addDevice вызван с данными:', deviceData);
           try {
             const response = await api.devices.createDevice(deviceData);
             console.log('✅ Устройство создано через API:', response);
             await get().loadDevices();
           } catch (error) {
+            console.error('❌ Ошибка создания устройства:', error);
             set({ error: 'Ошибка создания устройства через API' });
           }
         },
         updateDevice: async (deviceId, updates) => {
+          console.log(
+            '🏪 Store: updateDevice вызван для ID:',
+            deviceId,
+            'с данными:',
+            updates
+          );
           try {
             const response = await api.devices.updateDevice(deviceId, updates);
             console.log('✅ Устройство обновлено через API:', response);
             await get().loadDevices();
           } catch (error) {
+            console.error('❌ Ошибка обновления устройства:', error);
             set({ error: 'Ошибка обновления устройства через API' });
           }
         },
@@ -199,30 +214,14 @@ export const useNetworkStore = create<NetworkStore>()(
 
         // Folder actions
         addFolder: async (folderData) => {
-          const folder: DeviceFolder = {
-            ...folderData,
-            id: Math.random().toString(36).substr(2, 9),
-            children: [],
-          };
-
-          const addFolderRecursive = (
-            folders: DeviceFolder[]
-          ): DeviceFolder[] => {
-            return folders.map((f) =>
-              f.id === (folder.parentId || 'root')
-                ? { ...f, children: [...f.children, folder] }
-                : { ...f, children: addFolderRecursive(f.children) }
-            );
-          };
-
-          if (!folder.parentId || folder.parentId === 'root') {
-            set((state) => ({
-              folders: [...state.folders, folder],
-            }));
-          } else {
-            set((state) => ({
-              folders: addFolderRecursive(state.folders),
-            }));
+          console.log('🏪 Store: addFolder вызван с данными:', folderData);
+          try {
+            const response = await api.folders.createFolder(folderData);
+            console.log('✅ Папка создана через API:', response);
+            await get().loadFolders();
+          } catch (error) {
+            console.error('❌ Ошибка создания папки:', error);
+            set({ error: 'Ошибка создания папки через API' });
           }
         },
 
@@ -238,55 +237,65 @@ export const useNetworkStore = create<NetworkStore>()(
             return;
           }
 
-          // Специальная обработка для папки "Иные"
-          if (folderId === 'others') {
+          // Если обновляется только состояние expanded, сохраняем локально
+          if (
+            Object.keys(updates).length === 1 &&
+            updates.expanded !== undefined
+          ) {
             set((state) => ({
-              othersExpanded:
-                updates.expanded !== undefined
-                  ? updates.expanded
-                  : state.othersExpanded,
+              folderExpandedState: {
+                ...state.folderExpandedState,
+                [folderId]: updates.expanded!,
+              },
             }));
             return;
           }
 
-          const updateFolderRecursive = (
-            folders: DeviceFolder[]
-          ): DeviceFolder[] => {
-            return folders.map((folder) =>
-              folder.id === folderId
-                ? { ...folder, ...updates }
-                : {
-                    ...folder,
-                    children: updateFolderRecursive(folder.children),
-                  }
-            );
-          };
+          // Обновляем через API (только бизнес-данные, не UI состояние)
+          console.log(
+            '🏪 Store: updateFolder вызван для папки:',
+            folderId,
+            updates
+          );
+          try {
+            // Исключаем expanded из отправки на сервер
+            const { expanded, ...serverUpdates } = updates;
 
-          set((state) => ({
-            folders: updateFolderRecursive(state.folders),
-          }));
+            if (Object.keys(serverUpdates).length > 0) {
+              const response = await api.folders.updateFolder(
+                folderId,
+                serverUpdates
+              );
+              console.log('✅ Папка обновлена через API:', response);
+              await get().loadFolders();
+            }
+
+            // Сохраняем состояние expanded локально
+            if (expanded !== undefined) {
+              set((state) => ({
+                folderExpandedState: {
+                  ...state.folderExpandedState,
+                  [folderId]: expanded,
+                },
+              }));
+            }
+          } catch (error) {
+            console.error('❌ Ошибка обновления папки:', error);
+            set({ error: 'Ошибка обновления папки через API' });
+          }
         },
 
         deleteFolder: async (folderId) => {
-          const removeFolderRecursive = (
-            folders: DeviceFolder[]
-          ): DeviceFolder[] => {
-            return folders
-              .filter((folder) => folder.id !== folderId)
-              .map((folder) => ({
-                ...folder,
-                children: removeFolderRecursive(folder.children),
-              }));
-          };
-
-          set((state) => ({
-            folders: removeFolderRecursive(state.folders),
-            devices: state.devices.map((device) =>
-              device.folderId === folderId
-                ? { ...device, folderId: 'root' }
-                : device
-            ),
-          }));
+          console.log('🏪 Store: deleteFolder вызван для папки:', folderId);
+          try {
+            const response = await api.folders.deleteFolder(folderId);
+            console.log('✅ Папка удалена через API:', response);
+            await get().loadFolders();
+            await get().loadDevices(); // Перезагружаем устройства, т.к. они могли быть перемещены
+          } catch (error) {
+            console.error('❌ Ошибка удаления папки:', error);
+            set({ error: 'Ошибка удаления папки через API' });
+          }
         },
 
         // Alert actions
@@ -383,41 +392,27 @@ export const useNetworkStore = create<NetworkStore>()(
           set({ loading: true, error: null });
           try {
             const response = await api.devices.getDevices();
-            console.log('✅ API Response devices:', response);
-
-            // Проверяем формат ответа API
-            let devices = [];
+            let devices: NetworkDevice[] = [];
             if (response && response.data) {
-              // Если ответ в формате { data: [], success: true }
               devices = Array.isArray(response.data) ? response.data : [];
             } else if (Array.isArray(response)) {
-              // Если ответ - это просто массив устройств
               devices = response;
-            } else {
-              console.warn('Неожиданный формат ответа API, используем моки');
-              devices = mockDevices;
             }
-
-            console.log('📱 Загружено устройств:', devices.length);
             set({
-              devices: devices.length > 0 ? devices : mockDevices,
+              devices,
               loading: false,
               apiConnected: true,
               error: null,
             });
-            get().updateMetrics({});
+            // get().updateMetrics({}); // УДАЛЕНО: метрики теперь только из API
           } catch (error) {
-            console.error(
-              '❌ API недоступен, используем моковые данные:',
-              error
-            );
             set({
-              devices: mockDevices,
+              devices: [],
               loading: false,
-              error: 'API недоступен, показаны демо-данные',
+              error: 'API недоступен',
               apiConnected: false,
             });
-            get().updateMetrics({});
+            // get().updateMetrics({}); // УДАЛЕНО: метрики теперь только из API
           }
         },
 
@@ -470,6 +465,27 @@ export const useNetworkStore = create<NetworkStore>()(
             );
             set({
               bandwidthHistory: initialBandwidthHistory,
+              apiConnected: false,
+            });
+          }
+        },
+
+        loadFolders: async () => {
+          try {
+            const response = await api.folders.getFolders();
+            console.log('✅ API Response folders:', response);
+
+            if (response && response.data) {
+              set({
+                folders: response.data,
+                apiConnected: true,
+              });
+              console.log('📁 Папки загружены с API:', response.data.length);
+            }
+          } catch (error) {
+            console.error('❌ API недоступен для папок:', error);
+            set({
+              folders: [],
               apiConnected: false,
             });
           }
@@ -529,20 +545,12 @@ export const useNetworkStore = create<NetworkStore>()(
         refreshData: async () => {
           set({ loading: true, error: null });
           try {
-            const { useApi } = get();
-            if (useApi) {
-              // Пробуем загрузить данные с API
-              await Promise.allSettled([
-                get().loadDevices(),
-                get().loadSystemHealth(),
-                get().loadBandwidthData(),
-                get().loadNetworkMetrics(),
-              ]);
-            } else {
-              // Используем моковые данные
-              await new Promise((resolve) => setTimeout(resolve, 500));
-              get().updateMetrics({});
-            }
+            await Promise.allSettled([
+              get().loadDevices(),
+              get().loadSystemHealth(),
+              get().loadBandwidthData(),
+              get().loadNetworkMetrics(),
+            ]);
             set({ loading: false });
           } catch (error) {
             set({
@@ -564,6 +572,7 @@ export const useNetworkStore = create<NetworkStore>()(
             if (response.ok) {
               console.log('✅ API доступен! Включаем API режим');
               set({ useApi: true, apiConnected: true });
+              await get().loadFolders(); // Загружаем папки
               await get().refreshData();
             } else {
               console.log('❌ API недоступен, используем моковые данные');
@@ -617,31 +626,12 @@ export const useNetworkStore = create<NetworkStore>()(
             error: null,
           });
         },
-
         resetToMockData: () => {
-          set({
-            devices: mockDevices,
-            folders: mockFolders,
-            metrics: initialMetrics,
-            bandwidthHistory: initialBandwidthHistory,
-            alerts: mockAlerts,
-            systemHealth: initialSystemHealth,
-            connections: [],
-            selectedFolderId: 'root',
-            loading: false,
-            error: null,
-            rootFolderExpanded: true,
-            othersExpanded: false,
-          });
-          get().updateMetrics({});
+          // Отключено: mock-данные больше не используются
         },
 
         setRootFolderExpanded: (expanded) => {
           set({ rootFolderExpanded: expanded });
-        },
-
-        setOthersExpanded: (expanded) => {
-          set({ othersExpanded: expanded });
         },
 
         // System log actions
@@ -676,6 +666,12 @@ export const useNetworkStore = create<NetworkStore>()(
           }));
           get().updateMetrics({});
         },
+
+        // Folder UI state helpers
+        getFolderExpandedState: (folderId) => {
+          const state = get();
+          return state.folderExpandedState[folderId] ?? true; // По умолчанию папки развернуты
+        },
       }),
       {
         name: 'network-monitor-storage',
@@ -683,7 +679,6 @@ export const useNetworkStore = create<NetworkStore>()(
           selectedFolderId: state.selectedFolderId,
           sidebarCollapsed: state.sidebarCollapsed,
           rootFolderExpanded: state.rootFolderExpanded,
-          othersExpanded: state.othersExpanded,
         }),
       }
     )

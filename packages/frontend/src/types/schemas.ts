@@ -188,6 +188,9 @@ export const DeviceFormSchema = NetworkDeviceSchema.omit({
   id: true,
   lastSeen: true,
   status: true,
+}).extend({
+  responseTime: z.number().min(0).optional(),
+  uptime: z.number().min(0).max(100).optional(),
 });
 
 export const FolderFormSchema = z.object({

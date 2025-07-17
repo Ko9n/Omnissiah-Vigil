@@ -309,15 +309,15 @@ export const mockAlerts: AlertMessage[] = [
 
 // Initial Metrics
 export const initialMetrics: NetworkMetrics = {
-  totalDevices: 10,
-  onlineDevices: 8,
-  offlineDevices: 1,
-  warningDevices: 1,
-  averageResponseTime: 6,
-  totalBandwidth: 1000,
-  usedBandwidth: 720,
-  packetLoss: 0.2,
-  networkUptime: 98.7,
+  totalDevices: 0,
+  onlineDevices: 0,
+  offlineDevices: 0,
+  warningDevices: 0,
+  averageResponseTime: 0,
+  totalBandwidth: 0,
+  usedBandwidth: 0,
+  packetLoss: 0,
+  networkUptime: 0,
   lastUpdate: new Date(),
 };
 
