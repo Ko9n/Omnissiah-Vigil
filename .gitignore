@@ -7,10 +7,19 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
+# Dependencies
+# .node_modules
+
+# Build outputs
 dist
 dist-ssr
+.next
+tsconfig.tsbuildinfo
 *.local
+
+# Package manager conflicts
+# package-lock.json
+yarn.lock
 
 # Editor directories and files
 .vscode/*
@@ -22,4 +31,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.env
+# .env

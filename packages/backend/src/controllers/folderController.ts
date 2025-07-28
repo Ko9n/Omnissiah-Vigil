@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
-import prisma from "../utils/prisma";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 // GET /api/folders - получить все папки
 export const getAllFolders = async (
@@ -8,6 +10,10 @@ export const getAllFolders = async (
 ): Promise<void> => {
   try {
     console.log("📁 Запрос всех папок");
+
+    // Сначала проверим, есть ли вообще папки в базе
+    const totalFolders = await prisma.deviceFolder.count();
+    console.log(`📊 Всего папок в базе: ${totalFolders}`);
 
     const folders = await prisma.deviceFolder.findMany({
       include: {
@@ -23,6 +29,8 @@ export const getAllFolders = async (
       },
     });
 
+    console.log(`📁 Найдено корневых папок: ${folders.length}`);
+
     // Рекурсивно строим дерево папок
     const buildFolderTree = (folder: any): any => ({
       id: folder.id,
@@ -37,13 +45,15 @@ export const getAllFolders = async (
 
     const folderTree = folders.map(buildFolderTree);
 
+    console.log(`✅ Отправляем ${folderTree.length} папок`);
+
     res.json({
       success: true,
       data: folderTree,
       count: folderTree.length,
     });
   } catch (error) {
-    console.error("Ошибка получения папок:", error);
+    console.error("❌ Ошибка получения папок:", error);
     res.status(500).json({
       success: false,
       error: "Не удалось получить список папок",

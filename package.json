@@ -1,36 +1,18 @@
 {
-  "name": "network-monitor-monorepo",
-  "version": "1.0.0",
+  "name": "monitoring",
   "private": true,
-  "description": "Система мониторинга сети - монорепозиторий с фронтендом и бэкендом",
   "scripts": {
-    "dev": "concurrently \"pnpm dev:frontend\" \"pnpm dev:backend\"",
-    "dev:frontend": "cd packages\\frontend && pnpm dev",
-    "dev:backend": "cd packages\\backend && pnpm dev",
-    "build": "pnpm build:frontend && pnpm build:backend",
-    "build:frontend": "cd packages\\frontend && pnpm build",
-    "build:backend": "cd packages\\backend && pnpm build",
-    "start": "concurrently \"pnpm start:frontend\" \"pnpm start:backend\"",
-    "start:frontend": "cd packages\\frontend && pnpm start",
-    "start:backend": "cd packages\\backend && pnpm start",
-    "lint": "pnpm lint:frontend && pnpm lint:backend",
-    "lint:frontend": "cd packages\\frontend && pnpm lint",
-    "lint:backend": "cd packages\\backend && pnpm lint",
-    "type-check": "pnpm type-check:frontend && pnpm type-check:backend",
-    "type-check:frontend": "cd packages\\frontend && pnpm type-check",
-    "type-check:backend": "cd packages\\backend && pnpm type-check",
-    "test": "pnpm test:frontend && pnpm test:backend",
-    "test:frontend": "cd packages\\frontend && pnpm test",
-    "test:backend": "cd packages\\backend && pnpm test",
-    "install:backend": "cd packages\\backend && pnpm install",
-    "install:frontend": "cd packages\\frontend && pnpm install"
+    "clean": "pnpm -r exec rm -rf node_modules && rm -rf node_modules",
+    "dev": "pnpm -r run dev",
+    "build": "pnpm -r run build",
+    "start": "pnpm -r run start",
+    "db:generate": "pnpm --filter backend exec prisma generate",
+    "db:migrate": "pnpm --filter backend exec prisma migrate deploy",
+    "db:seed": "pnpm --filter backend exec prisma db seed",
+    "db:studio": "pnpm --filter backend exec prisma studio"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
-  },
-  "engines": {
-    "node": ">=18.0.0",
-    "pnpm": ">=8.0.0"
-  },
-  "packageManager": "pnpm@8.11.0"
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
 }

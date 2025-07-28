@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import * as ping from "ping";
-import prisma from "../utils/prisma";
+import dbManager from "../utils/prisma";
+import { log } from "../lib/logger";
+import { deviceCache } from "../utils/cache";
 import { exec } from "child_process";
 import { promisify } from "util";
 import net from "net";
@@ -88,7 +90,7 @@ const checkDeviceAvailability = async (device: any) => {
     methods.push({
       method: "node-ping",
       alive: pingResult.alive,
-      time: Math.round(pingResult.time || 0),
+      time: Math.round(Number(pingResult.time) || 0),
       success: true,
     });
   } catch (error) {
@@ -102,40 +104,53 @@ const checkDeviceAvailability = async (device: any) => {
   }
 
   // 2. Попробуем системный ping
-  const systemResult = await systemPing(device.ip);
-  methods.push({
-    method: "system-ping",
-    alive: systemResult.alive,
-    time: systemResult.time,
-    success: !systemResult.error,
-  });
-
-  // 3. Попробуем TCP подключение (если настроен HTTP)
-  if (device.monitoring?.http) {
-    const tcpResult = await checkTcpConnection(device.ip, 80);
+  try {
+    const systemResult = await systemPing(device.ip);
     methods.push({
-      method: "tcp-80",
-      alive: tcpResult,
-      time: tcpResult ? 50 : 0, // примерное время для TCP
+      method: "system-ping",
+      alive: systemResult.alive,
+      time: systemResult.time,
       success: true,
+      error: systemResult.error,
+    });
+  } catch (error) {
+    methods.push({
+      method: "system-ping",
+      alive: false,
+      time: 0,
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
     });
   }
 
-  // Выбираем лучший результат
-  const aliveMethod = methods.find((m) => m.alive && m.success);
-  if (aliveMethod) {
-    return {
-      alive: true,
-      time: aliveMethod.time,
-      method: aliveMethod.method,
-      allMethods: methods,
-    };
+  // 3. Попробуем TCP соединение на порт 80
+  try {
+    const tcpResult = await checkTcpConnection(device.ip, 80, 3000);
+    methods.push({
+      method: "tcp-80",
+      alive: tcpResult,
+      time: 0,
+      success: true,
+    });
+  } catch (error) {
+    methods.push({
+      method: "tcp-80",
+      alive: false,
+      time: 0,
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 
+  // Определяем лучший результат
+  const successfulMethods = methods.filter((m) => m.success && m.alive);
+  const bestMethod =
+    successfulMethods.length > 0 ? successfulMethods[0] : methods[0];
+
   return {
-    alive: false,
-    time: 0,
-    method: "all-failed",
+    alive: bestMethod?.alive || false,
+    responseTime: bestMethod?.time || 0,
+    method: bestMethod?.method || "unknown",
     allMethods: methods,
   };
 };
@@ -146,28 +161,74 @@ export const getAllDevices = async (
   res: Response
 ): Promise<void> => {
   try {
-    console.log("📡 Запрос всех устройств (Prisma)");
-    const rawDevices = await prisma.device.findMany();
+    const { page = 1, limit = 50, search, status, type, folderId } = req.query;
 
-    // Преобразуем данные для фронтенда
-    const devices = rawDevices.map((device: any) => ({
-      ...device,
-      folderId: device.folderId || null, // Если нет папки, то null (не "root")
-      monitoring: {
-        ping: device.monitoringPing ?? true,
-        snmp: device.monitoringSnmp ?? false,
-        http: device.monitoringHttp ?? false,
-        ssh: device.monitoringSsh ?? false,
-      },
-    }));
+    // Проверяем кэш
+    const cacheKey = `devices:${JSON.stringify(req.query)}`;
+    const cached = deviceCache.get(cacheKey);
+    if (cached) {
+      log.debug("Serving devices from cache", { cacheKey });
+      res.json(cached);
+      return;
+    }
 
-    res.json({
+    const prisma = dbManager.getClient();
+    const skip = (Number(page) - 1) * Number(limit);
+
+    // Строим условия фильтрации
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search as string, mode: "insensitive" } },
+        { ip: { contains: search as string, mode: "insensitive" } },
+        { description: { contains: search as string, mode: "insensitive" } },
+      ];
+    }
+
+    if (status) {
+      where.status = status;
+    }
+
+    if (type) {
+      where.type = type;
+    }
+
+    if (folderId) {
+      where.folderId = folderId;
+    }
+
+    const [devices, total] = await Promise.all([
+      prisma.device.findMany({
+        where,
+        skip,
+        take: Number(limit),
+        orderBy: { name: "asc" },
+        include: {
+          folder: true,
+        },
+      }),
+      prisma.device.count({ where }),
+    ]);
+
+    const result = {
       success: true,
       data: devices,
-      count: devices.length,
-    });
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        totalPages: Math.ceil(total / Number(limit)),
+      },
+    };
+
+    // Сохраняем в кэш на 2 минуты
+    deviceCache.set(cacheKey, result, 2 * 60 * 1000);
+
+    log.api(`Retrieved ${devices.length} devices (total: ${total})`);
+    res.json(result);
   } catch (error) {
-    console.error("Ошибка получения устройств:", error);
+    log.error("Error getting all devices", error);
     res.status(500).json({
       success: false,
       error: "Не удалось получить список устройств",
@@ -182,7 +243,28 @@ export const getDeviceById = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const device = await prisma.device.findUnique({ where: { id } });
+
+    // Проверяем кэш
+    const cacheKey = `device:${id}`;
+    const cached = deviceCache.get(cacheKey);
+    if (cached) {
+      log.debug("Serving device from cache", { deviceId: id });
+      res.json(cached);
+      return;
+    }
+
+    const prisma = dbManager.getClient();
+    const device = await prisma.device.findUnique({
+      where: { id },
+      include: {
+        folder: true,
+        pingHistory: {
+          take: 10,
+          orderBy: { timestamp: "desc" },
+        },
+      },
+    });
+
     if (!device) {
       res.status(404).json({
         success: false,
@@ -190,13 +272,19 @@ export const getDeviceById = async (
       });
       return;
     }
-    console.log(`📱 Запрос устройства: ${device.name}`);
-    res.json({
+
+    const result = {
       success: true,
       data: device,
-    });
+    };
+
+    // Сохраняем в кэш на 5 минут
+    deviceCache.set(cacheKey, result, 5 * 60 * 1000);
+
+    log.api(`Retrieved device: ${device.name} (${device.ip})`);
+    res.json(result);
   } catch (error) {
-    console.error("Ошибка получения устройства:", error);
+    log.error("Error getting device by ID", error);
     res.status(500).json({
       success: false,
       error: "Не удалось получить устройство",
@@ -210,52 +298,38 @@ export const createDevice = async (
   res: Response
 ): Promise<void> => {
   try {
-    const deviceData = req.body;
+    const prisma = dbManager.getClient();
 
-    console.log(`🔄 Создаем устройство с данными:`, deviceData);
-
-    const createData: any = {
-      name: deviceData.name,
-      ip: deviceData.ip,
-      type: deviceData.type || "unknown",
-      status: deviceData.status || "online",
-      responseTime: deviceData.responseTime || 0,
-      uptime: deviceData.uptime || 100,
-      location: deviceData.location || "",
-      description: deviceData.description || "",
-      // Дополнительные поля
-      mac: deviceData.mac || "",
-      vendor: deviceData.vendor || "",
-      model: deviceData.model || "",
-      osVersion: deviceData.osVersion || "",
-      // Настройки мониторинга
-      monitoringPing: deviceData.monitoring?.ping ?? true,
-      monitoringSnmp: deviceData.monitoring?.snmp ?? false,
-      monitoringHttp: deviceData.monitoring?.http ?? false,
-      monitoringSsh: deviceData.monitoring?.ssh ?? false,
-    };
-
-    // Связь с папкой - используем правильный синтаксис Prisma
-    if (
-      deviceData.folderId &&
-      deviceData.folderId !== "root" &&
-      deviceData.folderId !== null
-    ) {
-      createData.folder = { connect: { id: deviceData.folderId } };
-    }
-    // Если folderId === "root" или null, то оставляем folderId как null в базе
-
-    const newDevice = await prisma.device.create({
-      data: createData,
+    // Проверяем, не существует ли уже устройство с таким IP
+    const existingDevice = await prisma.device.findUnique({
+      where: { ip: req.body.ip },
     });
-    console.log(`➕ Создано устройство: ${newDevice.name}`);
+
+    if (existingDevice) {
+      res.status(400).json({
+        success: false,
+        error: "Устройство с таким IP адресом уже существует",
+      });
+      return;
+    }
+
+    const device = await prisma.device.create({
+      data: req.body,
+      include: {
+        folder: true,
+      },
+    });
+
+    // Очищаем кэш устройств
+    deviceCache.delete("devices:*");
+
+    log.api(`Created new device: ${device.name} (${device.ip})`);
     res.status(201).json({
       success: true,
-      data: newDevice,
-      message: "Устройство успешно создано",
+      data: device,
     });
   } catch (error) {
-    console.error("Ошибка создания устройства:", error);
+    log.error("Error creating device", error);
     res.status(500).json({
       success: false,
       error: "Не удалось создать устройство",
@@ -270,66 +344,55 @@ export const updateDevice = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
+    const prisma = dbManager.getClient();
 
-    // Подготавливаем данные для обновления
-    const updateFields: any = {};
+    // Проверяем существование устройства
+    const existingDevice = await prisma.device.findUnique({
+      where: { id },
+    });
 
-    // Простые поля
-    if (updateData.name !== undefined) updateFields.name = updateData.name;
-    if (updateData.ip !== undefined) updateFields.ip = updateData.ip;
-    if (updateData.type !== undefined) updateFields.type = updateData.type;
-    if (updateData.location !== undefined)
-      updateFields.location = updateData.location;
-    if (updateData.description !== undefined)
-      updateFields.description = updateData.description;
-    if (updateData.status !== undefined)
-      updateFields.status = updateData.status;
-    if (updateData.responseTime !== undefined)
-      updateFields.responseTime = updateData.responseTime;
-    if (updateData.uptime !== undefined)
-      updateFields.uptime = updateData.uptime;
-    if (updateData.mac !== undefined) updateFields.mac = updateData.mac;
-    if (updateData.vendor !== undefined)
-      updateFields.vendor = updateData.vendor;
-    if (updateData.model !== undefined) updateFields.model = updateData.model;
-    if (updateData.osVersion !== undefined)
-      updateFields.osVersion = updateData.osVersion;
+    if (!existingDevice) {
+      res.status(404).json({
+        success: false,
+        error: "Устройство не найдено",
+      });
+      return;
+    }
 
-    // Мониторинг настройки
-    if (updateData.monitoring?.ping !== undefined)
-      updateFields.monitoringPing = updateData.monitoring.ping;
-    if (updateData.monitoring?.snmp !== undefined)
-      updateFields.monitoringSnmp = updateData.monitoring.snmp;
-    if (updateData.monitoring?.http !== undefined)
-      updateFields.monitoringHttp = updateData.monitoring.http;
-    if (updateData.monitoring?.ssh !== undefined)
-      updateFields.monitoringSsh = updateData.monitoring.ssh;
+    // Если меняется IP, проверяем уникальность
+    if (req.body.ip && req.body.ip !== existingDevice.ip) {
+      const deviceWithSameIp = await prisma.device.findUnique({
+        where: { ip: req.body.ip },
+      });
 
-    // Связь с папкой - используем правильный синтаксис Prisma
-    if (updateData.folderId !== undefined) {
-      if (updateData.folderId === null || updateData.folderId === "root") {
-        updateFields.folder = { disconnect: true };
-      } else {
-        updateFields.folder = { connect: { id: updateData.folderId } };
+      if (deviceWithSameIp) {
+        res.status(400).json({
+          success: false,
+          error: "Устройство с таким IP адресом уже существует",
+        });
+        return;
       }
     }
 
-    console.log(`🔄 Обновляем устройство ${id} с данными:`, updateFields);
-
-    const updatedDevice = await prisma.device.update({
+    const device = await prisma.device.update({
       where: { id },
-      data: updateFields,
+      data: req.body,
+      include: {
+        folder: true,
+      },
     });
 
-    console.log(`✏️ Обновлено устройство: ${updatedDevice.name}`);
+    // Очищаем кэш
+    deviceCache.delete(`device:${id}`);
+    deviceCache.delete("devices:*");
+
+    log.api(`Updated device: ${device.name} (${device.ip})`);
     res.json({
       success: true,
-      data: updatedDevice,
-      message: "Устройство успешно обновлено",
+      data: device,
     });
   } catch (error) {
-    console.error("Ошибка обновления устройства:", error);
+    log.error("Error updating device", error);
     res.status(500).json({
       success: false,
       error: "Не удалось обновить устройство",
@@ -344,15 +407,23 @@ export const deleteDevice = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const deletedDevice = await prisma.device.delete({ where: { id } });
-    console.log(`🗑️ Удалено устройство: ${deletedDevice.name}`);
+    const prisma = dbManager.getClient();
+
+    const device = await prisma.device.delete({
+      where: { id },
+    });
+
+    // Очищаем кэш
+    deviceCache.delete(`device:${id}`);
+    deviceCache.delete("devices:*");
+
+    log.api(`Deleted device: ${device.name} (${device.ip})`);
     res.json({
       success: true,
-      data: deletedDevice,
       message: "Устройство успешно удалено",
     });
   } catch (error) {
-    console.error("Ошибка удаления устройства:", error);
+    log.error("Error deleting device", error);
     res.status(500).json({
       success: false,
       error: "Не удалось удалить устройство",
@@ -360,14 +431,18 @@ export const deleteDevice = async (
   }
 };
 
-// POST /api/devices/:id/ping - пинг устройства
+// POST /api/devices/:id/ping - выполнить ping устройства
 export const pingDevice = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const device = await prisma.device.findUnique({ where: { id } });
+    const prisma = dbManager.getClient();
+
+    const device = await prisma.device.findUnique({
+      where: { id },
+    });
 
     if (!device) {
       res.status(404).json({
@@ -377,39 +452,56 @@ export const pingDevice = async (
       return;
     }
 
-    console.log(`🏓 Пинг устройства: ${device.name} (${device.ip})`);
+    log.monitoring(
+      `Manual ping request for device: ${device.name} (${device.ip})`
+    );
 
-    // Используем улучшенную проверку доступности
     const result = await checkDeviceAvailability(device);
 
-    // Обновляем статус устройства
-    const updatedDevice = await prisma.device.update({
+    // Обновляем статус устройства в БД
+    await prisma.device.update({
       where: { id },
       data: {
         status: result.alive ? "online" : "offline",
-        responseTime: result.time,
+        responseTime: result.responseTime,
+        lastSeen: new Date(),
       },
     });
+
+    // Сохраняем историю пинга
+    await prisma.pingHistory.create({
+      data: {
+        deviceId: id as string,
+        isAlive: result.alive,
+        responseTime: result.responseTime,
+        packetLoss: result.alive ? "0%" : "100%", // TODO: получать из результата ping
+        timestamp: new Date(),
+      },
+    });
+
+    // Очищаем кэш устройства
+    deviceCache.delete(`device:${id}`);
+
+    log.monitoring(
+      `Ping result for ${device.name}: ${
+        result.alive ? "online" : "offline"
+      } (${result.responseTime}ms) via ${result.method}`
+    );
 
     res.json({
       success: true,
       data: {
         deviceId: id,
-        deviceName: updatedDevice.name,
-        ip: updatedDevice.ip,
+        deviceName: device.name,
+        ip: device.ip,
         alive: result.alive,
-        responseTime: result.time,
-        packetLoss: "0%", // TODO: получать из результата ping
-        timestamp: new Date().toISOString(),
+        responseTime: result.responseTime,
         method: result.method,
-        allMethods: result.allMethods,
+        timestamp: new Date().toISOString(),
       },
-      message: result.alive
-        ? `Устройство доступно (${result.method})`
-        : "Устройство недоступно",
     });
   } catch (error) {
-    console.error("Ошибка ping устройства:", error);
+    log.error("Error pinging device", error);
     res.status(500).json({
       success: false,
       error: "Не удалось выполнить ping устройства",

@@ -25,7 +25,7 @@ export default function TopologyFullscreenPage() {
           </div>
 
           <button
-            onClick={() => window.close()}
+            onClick={() => router.back()}
             className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-700/50 hover:text-white"
           >
             <X className="h-5 w-5" />

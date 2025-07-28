@@ -47,6 +47,9 @@ function ProgressBar({
       ? 'bg-yellow-500/20'
       : 'bg-green-500/20';
 
+  // Округляем проценты, кроме температуры
+  const displayValue = unit === '%' ? Math.round(value) : value;
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -60,7 +63,7 @@ function ProgressBar({
           <span className="text-sm font-medium text-slate-300">{label}</span>
         </div>
         <span className={`text-sm font-bold ${colorClasses.split(' ')[1]}`}>
-          {value}
+          {displayValue}
           {unit}
         </span>
       </div>

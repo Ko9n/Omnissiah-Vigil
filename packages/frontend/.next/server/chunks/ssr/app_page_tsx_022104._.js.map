@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 5, "column": 0}, "map": {"version":3,"sources":["/turbopack/[project]/packages/frontend/app/page.tsx"],"sourcesContent":["'use client';\r\n\r\nimport { NetworkDashboard } from '@/components/dashboard/network-dashboard';\r\n\r\nexport default function HomePage() {\r\n  return (\r\n    <main className=\"min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900\">\r\n      <NetworkDashboard />\r\n    </main>\r\n  );\r\n} "],"names":[],"mappings":";;;;;;AAAA;;;AAIe,SAAS;IACtB,qBACE,waAAC;QAAK,WAAU;kBACd,cAAA,waAAC,+KAAA,CAAA,mBAAgB;;;;;;;;;;AAGvB"}},
-    {"offset": {"line": 28, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"A"}}]
-}

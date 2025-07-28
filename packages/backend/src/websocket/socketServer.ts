@@ -1,7 +1,9 @@
 import { Server as SocketIOServer } from "socket.io";
 import { Server } from "http";
 import * as ping from "ping";
-import prisma from "../utils/prisma";
+import dbManager from "../utils/prisma";
+import { log } from "../lib/logger";
+import { authMiddleware, requireAuth, WebSocketAuth } from "../middleware/auth";
 import { exec } from "child_process";
 import { promisify } from "util";
 import net from "net";
@@ -93,6 +95,9 @@ export class SocketServer {
       },
     });
 
+    // Добавляем middleware для аутентификации
+    // this.io.use(authMiddleware);
+
     // Загружаем устройства из базы при старте
     this.loadDevicesFromDB();
 
@@ -101,20 +106,19 @@ export class SocketServer {
 
   private async loadDevicesFromDB() {
     try {
+      const prisma = dbManager.getClient();
       this.devices = await prisma.device.findMany();
-      console.log(
-        `🔄 WebSocket: загружено устройств из БД: ${this.devices.length}`
-      );
+      log.websocket(`Loaded ${this.devices.length} devices from database`);
     } catch (error) {
-      console.error("❌ WebSocket: ошибка загрузки устройств из БД:", error);
+      log.error("Error loading devices from database", error);
       this.devices = [];
     }
   }
 
   private setupSocketHandlers() {
     this.io.on("connection", (socket) => {
-      console.log(
-        `📡 WebSocket подключен: ${socket.id} (всего клиентов: ${this.io.engine.clientsCount})`
+      log.websocket(
+        `Client connected: ${socket.id} (total clients: ${this.io.engine.clientsCount})`
       );
 
       // Отправляем текущие метрики сразу при подключении
@@ -122,54 +126,79 @@ export class SocketServer {
 
       // Автоматически запускаем мониторинг при первом подключении
       if (this.io.engine.clientsCount === 1) {
-        console.log(
-          "🚀 Первый клиент подключен, запускаем автоматический мониторинг"
-        );
+        log.monitoring("First client connected, starting automatic monitoring");
         this.startMonitoring();
       }
 
-      // Ручное управление мониторингом
-      socket.on("start_monitoring", () => {
-        console.log("🔄 Клиент запросил начало мониторинга");
-        this.startMonitoring();
-      });
+      // Ручное управление мониторингом (требует аутентификации)
+      socket.on(
+        "start_monitoring",
+        // requireAuth(socket, "start_monitoring", () => {
+        () => {
+          log.monitoring("Client requested monitoring start");
+          this.startMonitoring();
+        }
+        // )
+      );
 
-      socket.on("stop_monitoring", () => {
-        console.log("⏹️ Клиент запросил остановку мониторинга");
-        this.stopMonitoring();
-      });
+      socket.on(
+        "stop_monitoring",
+        // requireAuth(socket, "stop_monitoring", () => {
+        () => {
+          log.monitoring("Client requested monitoring stop");
+          this.stopMonitoring();
+        }
+        // )
+      );
 
-      // Ручной ping устройства
-      socket.on("ping_device", async (deviceId: string) => {
-        console.log(`🏓 WebSocket ping запрос для устройства: ${deviceId}`);
-        await this.pingSingleDevice(deviceId, socket);
-      });
+      // Ручной ping устройства (требует аутентификации)
+      socket.on(
+        "ping_device",
+        // requireAuth(socket, "ping_device", async (deviceId: string) => {
+        async (deviceId: string) => {
+          log.monitoring(`WebSocket ping request for device: ${deviceId}`);
+          await this.pingSingleDevice(deviceId, socket);
+        }
+        // )
+      );
 
-      // Добавление устройства для мониторинга
-      socket.on("add_device", (device: any) => {
-        console.log(`➕ Добавление устройства для мониторинга: ${device.name}`);
-        if (!this.devices.find((d) => d.id === device.id)) {
-          this.devices.push(device);
+      // Добавление устройства для мониторинга (требует аутентификации)
+      socket.on(
+        "add_device",
+        // requireAuth(socket, "add_device", (device: any) => {
+        (device: any) => {
+          log.monitoring(`Adding device for monitoring: ${device.name}`);
+          if (!this.devices.find((d) => d.id === device.id)) {
+            this.devices.push(device);
+            this.io.emit("devices_updated", this.devices);
+          }
+        }
+        // )
+      );
+
+      // Удаление устройства из мониторинга (требует аутентификации)
+      socket.on(
+        "remove_device",
+        // requireAuth(socket, "remove_device", (deviceId: string) => {
+        (deviceId: string) => {
+          log.monitoring(`Removing device from monitoring: ${deviceId}`);
+          this.devices = this.devices.filter((d) => d.id !== deviceId);
           this.io.emit("devices_updated", this.devices);
         }
-      });
-
-      // Удаление устройства из мониторинга
-      socket.on("remove_device", (deviceId: string) => {
-        console.log(`➖ Удаление устройства из мониторинга: ${deviceId}`);
-        this.devices = this.devices.filter((d) => d.id !== deviceId);
-        this.io.emit("devices_updated", this.devices);
-      });
+        // )
+      );
 
       socket.on("disconnect", () => {
-        console.log(
-          `📡 WebSocket отключен: ${socket.id} (осталось клиентов: ${this.io.engine.clientsCount - 1})`
+        log.websocket(
+          `Client disconnected: ${socket.id} (remaining clients: ${
+            this.io.engine.clientsCount - 1
+          })`
         );
 
         // Если больше нет подключений, останавливаем мониторинг
         if (this.io.engine.clientsCount === 1) {
           // 1 потому что disconnect еще не завершен
-          console.log("⏸️ Последний клиент отключен, останавливаем мониторинг");
+          log.monitoring("Last client disconnected, stopping monitoring");
           this.stopMonitoring();
         }
       });
@@ -184,10 +213,38 @@ export class SocketServer {
   private async sendCurrentMetrics(socket?: any) {
     try {
       const metrics = await this.collectMetrics();
+
+      // Сохраняем системные метрики в БД
+      try {
+        const prisma = dbManager.getClient();
+        await prisma.systemMetrics.create({
+          data: {
+            cpuUsage: metrics.systemHealth.cpu,
+            memoryUsage: metrics.systemHealth.memory,
+            memoryUsed: 0, // TODO: Получать реальные значения из systeminformation
+            memoryTotal: 0, // TODO: Получать реальные значения из systeminformation
+            uptime: metrics.systemHealth.uptime,
+            temperature: metrics.systemHealth.temperature,
+            processes: metrics.systemHealth.processes,
+            timestamp: new Date(),
+          },
+        });
+      } catch (dbError) {
+        log.error("Error saving system metrics", dbError);
+      }
+
       const target = socket || this.io;
       target.emit("metrics_update", metrics);
+
+      log.monitoring(
+        `Metrics saved and sent to ${
+          socket
+            ? "single client"
+            : `all clients (${this.io.engine.clientsCount})`
+        }: ${metrics.deviceMetrics.length} devices`
+      );
     } catch (error) {
-      console.error("❌ Ошибка сбора метрик:", error);
+      log.error("Error collecting metrics", error);
     }
   }
 
@@ -209,13 +266,11 @@ export class SocketServer {
               if (nodePingResult.alive) {
                 result = {
                   alive: true,
-                  time: Math.round(nodePingResult.time || 0),
+                  time: Math.round(Number(nodePingResult.time) || 0),
                 };
               }
             } catch (nodePingError) {
-              console.log(
-                `⚠️ Node.js ping также не сработал для ${device.name}`
-              );
+              log.debug(`Node.js ping also failed for ${device.name}`);
             }
           }
 
@@ -226,22 +281,35 @@ export class SocketServer {
 
           // Обновляем статус устройства в БД
           try {
+            const prisma = dbManager.getClient();
             await prisma.device.update({
               where: { id: device.id },
               data: {
                 status,
                 responseTime,
+                lastSeen: new Date(),
+              },
+            });
+
+            // Сохраняем историю пинга
+            await prisma.pingHistory.create({
+              data: {
+                deviceId: device.id,
+                isAlive: result.alive,
+                responseTime: result.time,
+                packetLoss: result.alive ? "0%" : "100%",
+                timestamp: new Date(),
               },
             });
           } catch (dbError) {
-            console.error(
-              `❌ Ошибка обновления устройства ${device.name} в БД:`,
+            log.error(
+              `Error updating device ${device.name} in database`,
               dbError
             );
           }
 
-          console.log(
-            `🔍 ${device.name} (${device.ip}): ${status} - ${responseTime}ms`
+          log.debug(
+            `${device.name} (${device.ip}): ${status} - ${responseTime}ms`
           );
 
           return {
@@ -255,21 +323,36 @@ export class SocketServer {
         } catch (error) {
           // Обновляем статус как offline в БД при ошибке ping
           try {
+            const prisma = dbManager.getClient();
             await prisma.device.update({
               where: { id: device.id },
               data: {
                 status: "offline",
                 responseTime: 0,
+                lastSeen: new Date(),
+              },
+            });
+
+            // Сохраняем историю пинга об ошибке
+            await prisma.pingHistory.create({
+              data: {
+                deviceId: device.id,
+                isAlive: false,
+                responseTime: 0,
+                packetLoss: "100%",
+                errorMessage:
+                  error instanceof Error ? error.message : String(error),
+                timestamp: new Date(),
               },
             });
           } catch (dbError) {
-            console.error(
-              `❌ Ошибка обновления устройства ${device.name} в БД:`,
+            log.error(
+              `Error updating device ${device.name} in database`,
               dbError
             );
           }
 
-          console.log(`❌ ${device.name} (${device.ip}): ОШИБКА ПРОВЕРКИ`);
+          log.error(`${device.name} (${device.ip}): PING CHECK ERROR`);
 
           return {
             deviceId: device.id,
@@ -339,14 +422,16 @@ export class SocketServer {
         deviceName: device.name,
         ip: device.ip,
         alive: result.alive,
-        responseTime: Math.round(result.time || 0),
-        packetLoss: result.packetLoss || "0%",
+        responseTime: Math.round(Number(result.time) || 0),
+        packetLoss: result.alive ? "0%" : "100%",
         timestamp: new Date().toISOString(),
       };
 
       socket.emit("ping_result", pingResult);
-      console.log(
-        `🏓 Ping результат: ${device.name} - ${result.alive ? "онлайн" : "офлайн"} (${result.time}ms)`
+      log.monitoring(
+        `Ping result: ${device.name} - ${
+          result.alive ? "online" : "offline"
+        } (${result.time}ms)`
       );
     } catch (error) {
       socket.emit("ping_result", {
@@ -359,11 +444,11 @@ export class SocketServer {
 
   public startMonitoring() {
     if (this.monitoringInterval) {
-      console.log("⚠️ Мониторинг уже запущен");
+      log.warn("Monitoring already started");
       return;
     }
 
-    console.log("🚀 Запуск мониторинга в реальном времени (интервал: 30 сек)");
+    log.monitoring("Starting real-time monitoring (interval: 30 sec)");
     this.monitoringInterval = setInterval(async () => {
       // Обновляем список устройств из БД перед каждым циклом мониторинга
       await this.loadDevicesFromDB();
@@ -378,7 +463,7 @@ export class SocketServer {
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
       this.monitoringInterval = null;
-      console.log("⏹️ Мониторинг остановлен");
+      log.monitoring("Monitoring stopped");
     }
   }
 
