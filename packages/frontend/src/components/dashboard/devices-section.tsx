@@ -269,7 +269,7 @@ export const DevicesSection: React.FC<DevicesSectionProps> = (props) => {
       statusFilter === 'all' || device.status === statusFilter;
     const matchesType = typeFilter === 'all' || device.type === typeFilter;
 
-    // Исправленная логика фильтрации по папкам и устройствам
+    // Логика фильтрации по папкам
     let matchesFolder = true;
     if (selectedFolderId && selectedFolderId !== 'root') {
       // Проверяем, не выбрано ли конкретное устройство
@@ -283,9 +283,8 @@ export const DevicesSection: React.FC<DevicesSectionProps> = (props) => {
         matchesFolder = device.folderId === selectedFolderId;
       }
     } else {
-      // Для корневой папки показываем ТОЛЬКО устройства без папки
-      // Чтобы избежать дублирования с устройствами в папках
-      matchesFolder = !device.folderId || device.folderId === 'root';
+      // Для корневой папки ("Все устройства") показываем ВСЕ устройства
+      matchesFolder = true;
     }
 
     return matchesSearch && matchesStatus && matchesType && matchesFolder;
@@ -322,7 +321,7 @@ export const DevicesSection: React.FC<DevicesSectionProps> = (props) => {
 
   // Функция для получения названия папки или устройства
   const getFolderName = (folderId: string): string => {
-    if (!folderId || folderId === 'root') return 'Корневые устройства';
+    if (!folderId || folderId === 'root') return 'Все устройства';
 
     // Проверяем, не является ли это устройством
     const device = devices.find((d) => d.id === folderId);
@@ -388,10 +387,12 @@ export const DevicesSection: React.FC<DevicesSectionProps> = (props) => {
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-white">
-              Сетевые устройства
+              {getFolderName(selectedFolderId)}
             </h2>
             <p className="text-sm text-slate-400">
-              Обнаружено {devices.length} устройств в сети
+              {selectedFolderId === 'root'
+                ? `Всего устройств: ${devices.length}`
+                : `Устройств в папке: ${filteredDevices.length}`}
             </p>
           </div>
 

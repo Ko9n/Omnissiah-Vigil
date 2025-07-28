@@ -313,8 +313,29 @@ export const createDevice = async (
       return;
     }
 
+    // Подготавливаем данные для создания
+    const deviceData = { ...req.body };
+
+    // Обрабатываем folderId
+    if (
+      deviceData.folderId === "root" ||
+      deviceData.folderId === null ||
+      deviceData.folderId === ""
+    ) {
+      deviceData.folderId = null;
+    }
+
+    // Обрабатываем monitoring объект
+    if (deviceData.monitoring) {
+      deviceData.monitoringPing = deviceData.monitoring.ping || true;
+      deviceData.monitoringSnmp = deviceData.monitoring.snmp || false;
+      deviceData.monitoringHttp = deviceData.monitoring.http || false;
+      deviceData.monitoringSsh = deviceData.monitoring.ssh || false;
+      delete deviceData.monitoring;
+    }
+
     const device = await prisma.device.create({
-      data: req.body,
+      data: deviceData,
       include: {
         folder: true,
       },
@@ -322,6 +343,10 @@ export const createDevice = async (
 
     // Очищаем кэш устройств
     deviceCache.delete("devices:*");
+
+    // Очищаем кэш API
+    const cacheManager = require("../utils/cache").default;
+    cacheManager.clear();
 
     log.api(`Created new device: ${device.name} (${device.ip})`);
     res.status(201).json({
@@ -374,9 +399,30 @@ export const updateDevice = async (
       }
     }
 
+    // Подготавливаем данные для обновления
+    const updateData = { ...req.body };
+
+    // Обрабатываем folderId
+    if (
+      updateData.folderId === "root" ||
+      updateData.folderId === null ||
+      updateData.folderId === ""
+    ) {
+      updateData.folderId = null;
+    }
+
+    // Обрабатываем monitoring объект
+    if (updateData.monitoring) {
+      updateData.monitoringPing = updateData.monitoring.ping || true;
+      updateData.monitoringSnmp = updateData.monitoring.snmp || false;
+      updateData.monitoringHttp = updateData.monitoring.http || false;
+      updateData.monitoringSsh = updateData.monitoring.ssh || false;
+      delete updateData.monitoring;
+    }
+
     const device = await prisma.device.update({
       where: { id },
-      data: req.body,
+      data: updateData,
       include: {
         folder: true,
       },
@@ -385,6 +431,10 @@ export const updateDevice = async (
     // Очищаем кэш
     deviceCache.delete(`device:${id}`);
     deviceCache.delete("devices:*");
+
+    // Очищаем кэш API
+    const cacheManager = require("../utils/cache").default;
+    cacheManager.clear();
 
     log.api(`Updated device: ${device.name} (${device.ip})`);
     res.json({

@@ -2,8 +2,8 @@
 
 import { useNetworkStore } from '@/store/network-store';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FolderOpen, 
+import {
+  FolderOpen,
   FolderClosed,
   Plus,
   Settings,
@@ -14,25 +14,25 @@ import {
   Monitor,
   Printer,
   Smartphone,
-  Shield
+  Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 export function Sidebar() {
-  const { 
-    folders, 
-    devices, 
-    selectedFolderId, 
-    sidebarCollapsed, 
-    setSelectedFolder, 
+  const {
+    folders,
+    devices,
+    selectedFolderId,
+    sidebarCollapsed,
+    setSelectedFolder,
     setSidebarCollapsed,
-    updateFolder 
+    updateFolder,
   } = useNetworkStore();
 
   const getDeviceCountInFolder = (folderId: string): number => {
-    return devices.filter(device => device.folderId === folderId).length;
+    return devices.filter((device) => device.folderId === folderId).length;
   };
 
   const getIconForFolder = (iconName: string) => {
@@ -43,13 +43,19 @@ export function Sidebar() {
       Printer,
       Smartphone,
       Shield,
-      FolderOpen
+      FolderOpen,
     };
     const Icon = icons[iconName as keyof typeof icons] || FolderOpen;
     return Icon;
   };
 
-  const FolderItem = ({ folder, level = 0 }: { folder: any; level?: number }) => {
+  const FolderItem = ({
+    folder,
+    level = 0,
+  }: {
+    folder: any;
+    level?: number;
+  }) => {
     const Icon = getIconForFolder(folder.icon);
     const deviceCount = getDeviceCountInFolder(folder.id);
     const hasChildren = folder.children && folder.children.length > 0;
@@ -64,9 +70,9 @@ export function Sidebar() {
       >
         <div
           className={cn(
-            'group flex items-center w-full px-3 py-2 text-sm rounded-lg transition-all duration-200 cursor-pointer',
+            'group flex w-full cursor-pointer items-center rounded-lg px-3 py-2 text-sm transition-all duration-200',
             selectedFolderId === folder.id
-              ? 'bg-blue-500/20 text-blue-400 border-r-2 border-blue-500'
+              ? 'border-r-2 border-blue-500 bg-blue-500/20 text-blue-400'
               : 'text-slate-300 hover:bg-slate-700/50 hover:text-white',
             level > 0 && 'ml-4'
           )}
@@ -79,7 +85,7 @@ export function Sidebar() {
                 e.stopPropagation();
                 updateFolder(folder.id, { expanded: !folder.expanded });
               }}
-              className="mr-2 p-0.5 rounded hover:bg-slate-600/50"
+              className="mr-2 rounded p-0.5 hover:bg-slate-600/50"
             >
               {folder.expanded ? (
                 <ChevronDown className="h-3 w-3" />
@@ -88,15 +94,15 @@ export function Sidebar() {
               )}
             </button>
           )}
-          
-          <div 
-            className="w-2 h-2 rounded-full mr-3 flex-shrink-0"
+
+          <div
+            className="mr-3 h-2 w-2 flex-shrink-0 rounded-full"
             style={{ backgroundColor: folder.color }}
           />
-          
+
           {!sidebarCollapsed && (
             <>
-              <Icon className="h-4 w-4 mr-3 flex-shrink-0" />
+              <Icon className="mr-3 h-4 w-4 flex-shrink-0" />
               <span className="flex-1 truncate">{folder.name}</span>
               {deviceCount > 0 && (
                 <Badge variant="secondary" className="ml-2 text-xs">
@@ -159,6 +165,28 @@ export function Sidebar() {
         {/* Folders */}
         <div className="flex-1 overflow-y-auto p-2">
           <div className="space-y-1">
+            {/* "Все устройства" опция */}
+            <div
+              className={cn(
+                'group flex w-full cursor-pointer items-center rounded-lg px-3 py-2 text-sm transition-all duration-200',
+                selectedFolderId === 'root'
+                  ? 'border-r-2 border-blue-500 bg-blue-500/20 text-blue-400'
+                  : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
+              )}
+              onClick={() => setSelectedFolder('root')}
+            >
+              <div className="mr-3 h-2 w-2 flex-shrink-0 rounded-full bg-blue-400" />
+              {!sidebarCollapsed && (
+                <>
+                  <Network className="mr-3 h-4 w-4 flex-shrink-0" />
+                  <span className="flex-1 truncate">Все устройства</span>
+                  <Badge variant="secondary" className="ml-2 text-xs">
+                    {devices.length}
+                  </Badge>
+                </>
+              )}
+            </div>
+
             {folders.map((folder) => (
               <FolderItem key={folder.id} folder={folder} />
             ))}
@@ -177,9 +205,9 @@ export function Sidebar() {
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full justify-start text-slate-300 border-slate-600"
+                className="w-full justify-start border-slate-600 text-slate-300"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 Добавить папку
               </Button>
               <Button
@@ -187,7 +215,7 @@ export function Sidebar() {
                 size="sm"
                 className="w-full justify-start text-slate-400"
               >
-                <Settings className="h-4 w-4 mr-2" />
+                <Settings className="mr-2 h-4 w-4" />
                 Настройки
               </Button>
             </div>
@@ -196,4 +224,4 @@ export function Sidebar() {
       </div>
     </motion.aside>
   );
-} 
+}
