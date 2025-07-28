@@ -1993,13 +1993,11 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lu
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$294$2e$0_react$40$18$2e$3$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$wifi$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Wifi$3e$__ = __turbopack_import__("[project]/node_modules/.pnpm/lucide-react@0.294.0_react@18.3.1/node_modules/lucide-react/dist/esm/icons/wifi.js [app-client] (ecmascript) <export default as Wifi>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/packages/frontend/src/components/ui/button.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/packages/frontend/src/components/ui/card.tsx [app-client] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/packages/frontend/src/components/ui/badge.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$components$2f$ui$2f$toast$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/packages/frontend/src/components/ui/toast.tsx [app-client] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
 ;
 var _s = __turbopack_refresh__.signature(), _s1 = __turbopack_refresh__.signature(), _s2 = __turbopack_refresh__.signature();
 'use client';
-;
 ;
 ;
 ;
@@ -2023,10 +2021,40 @@ const statusColors = {
     warning: 'bg-yellow-500'
 };
 const statusBadgeColors = {
-    online: 'bg-green-500/20 text-green-400 border-green-500/20',
-    offline: 'bg-red-500/20 text-red-400 border-red-500/20',
-    warning: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/20'
+    online: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+    offline: 'bg-red-500/10 text-red-400 border-red-500/30',
+    warning: 'bg-amber-500/10 text-amber-400 border-amber-500/30'
 };
+const statusDotColors = {
+    online: 'bg-emerald-400',
+    offline: 'bg-red-400',
+    warning: 'bg-amber-400'
+};
+const StatusIndicator = ({ status })=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        className: "flex items-center space-x-2",
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: `h-2 w-2 rounded-full ${statusDotColors[status]} animate-pulse`
+            }, void 0, false, {
+                fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
+                lineNumber: 74,
+                columnNumber: 5
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                className: `text-xs font-medium capitalize ${statusBadgeColors[status].split(' ')[1]}`,
+                children: status
+            }, void 0, false, {
+                fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
+                lineNumber: 77,
+                columnNumber: 5
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
+        lineNumber: 73,
+        columnNumber: 3
+    }, this);
+_c = StatusIndicator;
 const DeviceCard = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].memo(_s(({ device, onEdit, onDelete })=>{
     _s();
     const Icon = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMemo"])(()=>deviceIcons[device.type] || __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$294$2e$0_react$40$18$2e$3$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$network$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Network$3e$__["Network"], [
@@ -2066,12 +2094,12 @@ const DeviceCard = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5d2f
                                             className: "h-5 w-5 text-blue-400"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                            lineNumber: 86,
+                                            lineNumber: 109,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                        lineNumber: 85,
+                                        lineNumber: 108,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2081,7 +2109,7 @@ const DeviceCard = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5d2f
                                                 children: device.name
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                                lineNumber: 89,
+                                                lineNumber: 112,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2089,33 +2117,32 @@ const DeviceCard = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5d2f
                                                 children: device.ip
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                                lineNumber: 92,
+                                                lineNumber: 115,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                        lineNumber: 88,
+                                        lineNumber: 111,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                lineNumber: 84,
+                                lineNumber: 107,
                                 columnNumber: 13
                             }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
-                                className: statusBadgeColors[device.status],
-                                children: device.status
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(StatusIndicator, {
+                                status: device.status
                             }, void 0, false, {
                                 fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                lineNumber: 95,
+                                lineNumber: 118,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                        lineNumber: 83,
+                        lineNumber: 106,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2129,7 +2156,7 @@ const DeviceCard = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5d2f
                                         children: "Время отклика"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                        lineNumber: 103,
+                                        lineNumber: 124,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2140,13 +2167,13 @@ const DeviceCard = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5d2f
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                        lineNumber: 104,
+                                        lineNumber: 125,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                lineNumber: 102,
+                                lineNumber: 123,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2157,7 +2184,7 @@ const DeviceCard = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5d2f
                                         children: "Время работы"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                        lineNumber: 107,
+                                        lineNumber: 128,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2168,13 +2195,13 @@ const DeviceCard = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5d2f
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                        lineNumber: 108,
+                                        lineNumber: 129,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                lineNumber: 106,
+                                lineNumber: 127,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2185,7 +2212,7 @@ const DeviceCard = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5d2f
                                         children: "Производитель"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                        lineNumber: 111,
+                                        lineNumber: 132,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2193,13 +2220,13 @@ const DeviceCard = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5d2f
                                         children: device.vendor || 'N/A'
                                     }, void 0, false, {
                                         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                        lineNumber: 112,
+                                        lineNumber: 133,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                lineNumber: 110,
+                                lineNumber: 131,
                                 columnNumber: 13
                             }, this),
                             device.location && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2210,7 +2237,7 @@ const DeviceCard = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5d2f
                                         children: "Локация"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                        lineNumber: 116,
+                                        lineNumber: 137,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2218,19 +2245,19 @@ const DeviceCard = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5d2f
                                         children: device.location
                                     }, void 0, false, {
                                         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                        lineNumber: 117,
+                                        lineNumber: 138,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                lineNumber: 115,
+                                lineNumber: 136,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                        lineNumber: 101,
+                        lineNumber: 122,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2244,7 +2271,7 @@ const DeviceCard = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5d2f
                                 children: "Изменить"
                             }, void 0, false, {
                                 fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                lineNumber: 124,
+                                lineNumber: 145,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -2255,33 +2282,33 @@ const DeviceCard = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5d2f
                                 children: "Удалить"
                             }, void 0, false, {
                                 fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                lineNumber: 132,
+                                lineNumber: 153,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                        lineNumber: 123,
+                        lineNumber: 144,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                lineNumber: 81,
+                lineNumber: 104,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-            lineNumber: 80,
+            lineNumber: 103,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-        lineNumber: 73,
+        lineNumber: 96,
         columnNumber: 5
     }, this);
 }, "CerwWSRw/ZY0X4ZS/VKBjMokm3Y="));
-_c = DeviceCard;
+_c1 = DeviceCard;
 DeviceCard.displayName = 'DeviceCard';
 const DeviceListRow = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].memo(_s1(({ device, onEdit, onDelete })=>{
     _s1();
@@ -2321,12 +2348,12 @@ const DeviceListRow = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5
                                         className: "h-4 w-4 text-blue-400"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                        lineNumber: 172,
+                                        lineNumber: 193,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 171,
+                                    lineNumber: 192,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2336,7 +2363,7 @@ const DeviceListRow = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5
                                             children: device.name
                                         }, void 0, false, {
                                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                            lineNumber: 175,
+                                            lineNumber: 196,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2344,19 +2371,19 @@ const DeviceListRow = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5
                                             children: device.type
                                         }, void 0, false, {
                                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                            lineNumber: 178,
+                                            lineNumber: 199,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 174,
+                                    lineNumber: 195,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                            lineNumber: 170,
+                            lineNumber: 191,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2367,7 +2394,7 @@ const DeviceListRow = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5
                                     children: device.ip
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 183,
+                                    lineNumber: 204,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2375,28 +2402,27 @@ const DeviceListRow = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5
                                     children: device.location || 'N/A'
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 184,
+                                    lineNumber: 205,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                            lineNumber: 182,
+                            lineNumber: 203,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "flex items-center",
-                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
-                                className: statusBadgeColors[device.status],
-                                children: device.status
+                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(StatusIndicator, {
+                                status: device.status
                             }, void 0, false, {
                                 fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                lineNumber: 188,
+                                lineNumber: 209,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                            lineNumber: 187,
+                            lineNumber: 208,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2410,7 +2436,7 @@ const DeviceListRow = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 194,
+                                    lineNumber: 213,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2418,13 +2444,13 @@ const DeviceListRow = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5
                                     children: "отклик"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 195,
+                                    lineNumber: 214,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                            lineNumber: 193,
+                            lineNumber: 212,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2438,7 +2464,7 @@ const DeviceListRow = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 199,
+                                    lineNumber: 218,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2446,13 +2472,13 @@ const DeviceListRow = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5
                                     children: "время работы"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 200,
+                                    lineNumber: 219,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                            lineNumber: 198,
+                            lineNumber: 217,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2466,7 +2492,7 @@ const DeviceListRow = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5
                                     children: "Изменить"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 204,
+                                    lineNumber: 223,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -2477,38 +2503,38 @@ const DeviceListRow = /*#__PURE__*/ __TURBOPACK__imported__module__$5b$project$5
                                     children: "Удалить"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 212,
+                                    lineNumber: 231,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                            lineNumber: 203,
+                            lineNumber: 222,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                    lineNumber: 169,
+                    lineNumber: 190,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                lineNumber: 168,
+                lineNumber: 189,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-            lineNumber: 167,
+            lineNumber: 188,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-        lineNumber: 160,
+        lineNumber: 181,
         columnNumber: 5
     }, this);
 }, "CerwWSRw/ZY0X4ZS/VKBjMokm3Y="));
-_c1 = DeviceListRow;
+_c2 = DeviceListRow;
 DeviceListRow.displayName = 'DeviceListRow';
 const DevicesSection = (props)=>{
     _s2();
@@ -2636,7 +2662,7 @@ const DevicesSection = (props)=>{
                                     children: getFolderName(selectedFolderId)
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 389,
+                                    lineNumber: 408,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2644,13 +2670,13 @@ const DevicesSection = (props)=>{
                                     children: selectedFolderId === 'root' ? `Всего устройств: ${devices.length}` : `Устройств в папке: ${filteredDevices.length}`
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 392,
+                                    lineNumber: 411,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                            lineNumber: 388,
+                            lineNumber: 407,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2674,20 +2700,20 @@ const DevicesSection = (props)=>{
                                             children: "🏓"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                            lineNumber: 419,
+                                            lineNumber: 438,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                             children: "Ping всех"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                            lineNumber: 420,
+                                            lineNumber: 439,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 400,
+                                    lineNumber: 419,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2707,20 +2733,20 @@ const DevicesSection = (props)=>{
                                             children: "🔄"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                            lineNumber: 442,
+                                            lineNumber: 461,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                             children: "Обновить"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                            lineNumber: 443,
+                                            lineNumber: 462,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 423,
+                                    lineNumber: 442,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2731,32 +2757,32 @@ const DevicesSection = (props)=>{
                                             children: "➕"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                            lineNumber: 450,
+                                            lineNumber: 469,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                             children: "Добавить"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                            lineNumber: 451,
+                                            lineNumber: 470,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 446,
+                                    lineNumber: 465,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                            lineNumber: 399,
+                            lineNumber: 418,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                    lineNumber: 387,
+                    lineNumber: 406,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2769,7 +2795,7 @@ const DevicesSection = (props)=>{
                                     className: "absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-slate-400"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 459,
+                                    lineNumber: 478,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2780,13 +2806,13 @@ const DevicesSection = (props)=>{
                                     className: "w-full rounded-lg border border-slate-600/50 bg-slate-700/50 py-2 pl-10 pr-4 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 460,
+                                    lineNumber: 479,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                            lineNumber: 458,
+                            lineNumber: 477,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -2799,7 +2825,7 @@ const DevicesSection = (props)=>{
                                     children: "Все статусы"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 476,
+                                    lineNumber: 495,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2807,7 +2833,7 @@ const DevicesSection = (props)=>{
                                     children: "Онлайн"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 477,
+                                    lineNumber: 496,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2815,7 +2841,7 @@ const DevicesSection = (props)=>{
                                     children: "Офлайн"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 478,
+                                    lineNumber: 497,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2823,13 +2849,13 @@ const DevicesSection = (props)=>{
                                     children: "Предупреждения"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 479,
+                                    lineNumber: 498,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                            lineNumber: 471,
+                            lineNumber: 490,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -2842,7 +2868,7 @@ const DevicesSection = (props)=>{
                                     children: "Все типы"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 487,
+                                    lineNumber: 506,
                                     columnNumber: 13
                                 }, this),
                                 deviceTypes.map((type)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2850,13 +2876,13 @@ const DevicesSection = (props)=>{
                                         children: type.charAt(0).toUpperCase() + type.slice(1)
                                     }, type, false, {
                                         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                        lineNumber: 489,
+                                        lineNumber: 508,
                                         columnNumber: 15
                                     }, this))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                            lineNumber: 482,
+                            lineNumber: 501,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2872,7 +2898,7 @@ const DevicesSection = (props)=>{
                                             children: "Имя"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                            lineNumber: 501,
+                                            lineNumber: 520,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2880,7 +2906,7 @@ const DevicesSection = (props)=>{
                                             children: "IP адрес"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                            lineNumber: 502,
+                                            lineNumber: 521,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2888,7 +2914,7 @@ const DevicesSection = (props)=>{
                                             children: "Статус"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                            lineNumber: 503,
+                                            lineNumber: 522,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2896,7 +2922,7 @@ const DevicesSection = (props)=>{
                                             children: "Время отклика"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                            lineNumber: 504,
+                                            lineNumber: 523,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2904,7 +2930,7 @@ const DevicesSection = (props)=>{
                                             children: "Время работы"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                            lineNumber: 505,
+                                            lineNumber: 524,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2912,13 +2938,13 @@ const DevicesSection = (props)=>{
                                             children: "Последний раз онлайн"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                            lineNumber: 506,
+                                            lineNumber: 525,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 496,
+                                    lineNumber: 515,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -2930,30 +2956,30 @@ const DevicesSection = (props)=>{
                                         className: "h-4 w-4"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                        lineNumber: 517,
+                                        lineNumber: 536,
                                         columnNumber: 17
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$294$2e$0_react$40$18$2e$3$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$down$2d$wide$2d$narrow$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__SortDesc$3e$__["SortDesc"], {
                                         className: "h-4 w-4"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                        lineNumber: 519,
+                                        lineNumber: 538,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 508,
+                                    lineNumber: 527,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                            lineNumber: 495,
+                            lineNumber: 514,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                    lineNumber: 457,
+                    lineNumber: 476,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2968,12 +2994,12 @@ const DevicesSection = (props)=>{
                                     onDelete: handleDeleteDevice
                                 }, device.id, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 533,
+                                    lineNumber: 552,
                                     columnNumber: 17
                                 }, this))
                         }, void 0, false, {
                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                            lineNumber: 528,
+                            lineNumber: 547,
                             columnNumber: 13
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$framer$2d$motion$40$10$2e$18$2e$0_react_39718d184a546e7029955c4644d61736$2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$dom$2f$motion$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].div, {
                             layout: true,
@@ -2984,12 +3010,12 @@ const DevicesSection = (props)=>{
                                     onDelete: handleDeleteDevice
                                 }, device.id, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 544,
+                                    lineNumber: 563,
                                     columnNumber: 17
                                 }, this))
                         }, void 0, false, {
                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                            lineNumber: 542,
+                            lineNumber: 561,
                             columnNumber: 13
                         }, this),
                         sortedDevices.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3000,7 +3026,7 @@ const DevicesSection = (props)=>{
                                     children: "Устройства не найдены"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 556,
+                                    lineNumber: 575,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$14$2e$2$2e$30_$40$babel$2b$core$40$7$2e$_a586cea58d140d795b3e7e933c4742d2$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3008,30 +3034,30 @@ const DevicesSection = (props)=>{
                                     children: "Попробуйте изменить фильтры поиска"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                                    lineNumber: 559,
+                                    lineNumber: 578,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                            lineNumber: 555,
+                            lineNumber: 574,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-                    lineNumber: 526,
+                    lineNumber: 545,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-            lineNumber: 385,
+            lineNumber: 404,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/packages/frontend/src/components/dashboard/devices-section.tsx",
-        lineNumber: 384,
+        lineNumber: 403,
         columnNumber: 5
     }, this);
 };
@@ -3041,11 +3067,12 @@ _s2(DevicesSection, "98f0lqQG4J48wIvJQXVjdZXHgqg=", false, function() {
         __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$frontend$2f$src$2f$components$2f$ui$2f$toast$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useToast"]
     ];
 });
-_c2 = DevicesSection;
-var _c, _c1, _c2;
-__turbopack_refresh__.register(_c, "DeviceCard");
-__turbopack_refresh__.register(_c1, "DeviceListRow");
-__turbopack_refresh__.register(_c2, "DevicesSection");
+_c3 = DevicesSection;
+var _c, _c1, _c2, _c3;
+__turbopack_refresh__.register(_c, "StatusIndicator");
+__turbopack_refresh__.register(_c1, "DeviceCard");
+__turbopack_refresh__.register(_c2, "DeviceListRow");
+__turbopack_refresh__.register(_c3, "DevicesSection");
 
 })()),
 "[project]/packages/frontend/src/components/ui/alerts-panel.tsx [app-client] (ecmascript)": (({ r: __turbopack_require__, f: __turbopack_module_context__, i: __turbopack_import__, s: __turbopack_esm__, v: __turbopack_export_value__, n: __turbopack_export_namespace__, c: __turbopack_cache__, M: __turbopack_modules__, l: __turbopack_load__, j: __turbopack_dynamic__, P: __turbopack_resolve_absolute_path__, U: __turbopack_relative_url__, R: __turbopack_resolve_module_id_path__, g: global, __dirname, k: __turbopack_refresh__ }) => (() => {

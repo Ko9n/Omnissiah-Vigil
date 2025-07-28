@@ -103,8 +103,15 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 // Input sanitization
 app.use(sanitizeInput);
 
-// Rate limiting
-app.use(rateLimit(100, 15 * 60 * 1000)); // 100 requests per 15 minutes
+// Rate limiting - более мягкие настройки для мониторинга
+app.use((req, res, next) => {
+  // Более мягкий rate limiting для API мониторинга
+  if (req.path.startsWith("/api/")) {
+    return rateLimit(2000, 15 * 60 * 1000)(req, res, next); // 2000 requests per 15 minutes for API
+  }
+  // Стандартный rate limiting для остальных запросов
+  return rateLimit(500, 15 * 60 * 1000)(req, res, next); // 500 requests per 15 minutes
+});
 
 // Cache middleware for GET requests
 app.use(cacheMiddleware(5 * 60 * 1000)); // 5 minutes cache

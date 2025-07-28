@@ -54,10 +54,33 @@ const statusColors = {
 };
 
 const statusBadgeColors = {
-  online: 'bg-green-500/20 text-green-400 border-green-500/20',
-  offline: 'bg-red-500/20 text-red-400 border-red-500/20',
-  warning: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/20',
+  online: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+  offline: 'bg-red-500/10 text-red-400 border-red-500/30',
+  warning: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
 };
+
+const statusDotColors = {
+  online: 'bg-emerald-400',
+  offline: 'bg-red-400',
+  warning: 'bg-amber-400',
+};
+
+const StatusIndicator = ({
+  status,
+}: {
+  status: 'online' | 'offline' | 'warning';
+}) => (
+  <div className="flex items-center space-x-2">
+    <div
+      className={`h-2 w-2 rounded-full ${statusDotColors[status]} animate-pulse`}
+    />
+    <span
+      className={`text-xs font-medium capitalize ${statusBadgeColors[status].split(' ')[1]}`}
+    >
+      {status}
+    </span>
+  </div>
+);
 
 const DeviceCard = React.memo<{
   device: NetworkDevice;
@@ -92,9 +115,7 @@ const DeviceCard = React.memo<{
                 <p className="text-sm text-slate-400">{device.ip}</p>
               </div>
             </div>
-            <Badge className={statusBadgeColors[device.status]}>
-              {device.status}
-            </Badge>
+            <StatusIndicator status={device.status} />
           </div>
 
           {/* Info */}
@@ -185,9 +206,7 @@ const DeviceListRow = React.memo<{
             </div>
 
             <div className="flex items-center">
-              <Badge className={statusBadgeColors[device.status]}>
-                {device.status}
-              </Badge>
+              <StatusIndicator status={device.status} />
             </div>
 
             <div className="text-center text-sm">
