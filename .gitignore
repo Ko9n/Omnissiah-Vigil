@@ -8,7 +8,8 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # Dependencies
-# .node_modules
+node_modules/
+.pnpm-store/
 
 # Build outputs
 dist
@@ -16,6 +17,13 @@ dist-ssr
 .next
 tsconfig.tsbuildinfo
 *.local
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Package manager conflicts
 # package-lock.json
