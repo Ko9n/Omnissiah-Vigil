@@ -5,6 +5,37 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// Утилита для обрезки длинного текста
+export function truncateText(text: string, maxLength: number): string {
+  if (!text || text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
+}
+
+// Утилита для форматирования IPv6 адресов
+export function formatIPv6(ip: string): string {
+  if (!ip || !ip.includes(':')) return ip;
+
+  // Если это IPv6 адрес
+  if (ip.split(':').length > 4) {
+    const parts = ip.split(':');
+    if (parts.length >= 8) {
+      return `${parts[0]}:${parts[1]}:${parts[2]}:${parts[3]}...${parts[parts.length - 2]}:${parts[parts.length - 1]}`;
+    }
+  }
+
+  return ip;
+}
+
+// Утилита для округления процентов
+export function formatPercentage(value: number): string {
+  return `${Math.round(value * 10) / 10}%`;
+}
+
+// Утилита для форматирования времени отклика
+export function formatResponseTime(value: number): string {
+  return `${value}ms`;
+}
+
 // Форматирование времени "назад" (например "5 мин назад")
 export function formatTimeAgo(date: Date | string): string {
   const now = new Date();

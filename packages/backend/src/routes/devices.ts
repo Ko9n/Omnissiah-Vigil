@@ -6,6 +6,8 @@ import {
   updateDevice,
   deleteDevice,
   pingDevice,
+  scanNetwork,
+  bulkCreateDevices,
 } from "../controllers/deviceController";
 
 const router: RouterType = Router();
@@ -27,5 +29,11 @@ router.delete("/:id", deleteDevice);
 
 // POST /api/devices/:id/ping - пинг устройства
 router.post("/:id/ping", pingDevice);
+
+// POST /api/devices/scan-network - сканировать сеть
+router.post("/scan-network", scanNetwork);
+
+// POST /api/devices/bulk-create - массовое создание устройств
+router.post("/bulk-create", bulkCreateDevices);
 
 export default router;

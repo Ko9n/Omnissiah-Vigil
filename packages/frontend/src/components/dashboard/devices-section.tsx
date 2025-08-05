@@ -19,13 +19,16 @@ import {
   Shield,
   Router,
   Wifi,
+  Scan,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { NetworkDevice } from '@/types/schemas';
+import { NetworkDevice, DeviceFolder } from '@/types/schemas';
 import { useToast } from '@/components/ui/toast';
+import { NetworkScanner } from '@/components/ui/network-scanner';
+import { truncateText, formatIPv6, formatPercentage } from '@/lib/utils';
 
 type SortField =
   | 'name'
@@ -108,11 +111,19 @@ const DeviceCard = React.memo<{
               <div className="rounded-lg bg-slate-700/50 p-2">
                 <Icon className="h-5 w-5 text-blue-400" />
               </div>
-              <div>
-                <h4 className="truncate font-medium text-white">
+              <div className="min-w-0 flex-1">
+                <h4
+                  className="truncate font-medium text-white"
+                  title={device.name}
+                >
                   {device.name}
                 </h4>
-                <p className="text-sm text-slate-400">{device.ip}</p>
+                <p
+                  className="truncate text-sm text-slate-400"
+                  title={device.ip}
+                >
+                  {formatIPv6(device.ip)}
+                </p>
               </div>
             </div>
             <StatusIndicator status={device.status} />
@@ -126,16 +137,25 @@ const DeviceCard = React.memo<{
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-slate-400">Время работы</span>
-              <span className="text-white">{device.uptime}%</span>
+              <span className="text-white">
+                {formatPercentage(device.uptime)}
+              </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-slate-400">Производитель</span>
-              <span className="text-white">{device.vendor || 'N/A'}</span>
+              <span
+                className="truncate text-white"
+                title={device.vendor || 'N/A'}
+              >
+                {truncateText(device.vendor || 'N/A', 15)}
+              </span>
             </div>
             {device.location && (
               <div className="flex justify-between text-sm">
                 <span className="text-slate-400">Локация</span>
-                <span className="truncate text-white">{device.location}</span>
+                <span className="truncate text-white" title={device.location}>
+                  {truncateText(device.location, 12)}
+                </span>
               </div>
             )}
           </div>
@@ -192,17 +212,32 @@ const DeviceListRow = React.memo<{
               <div className="rounded-lg bg-slate-700/50 p-2">
                 <Icon className="h-4 w-4 text-blue-400" />
               </div>
-              <div>
-                <h4 className="truncate font-medium text-white">
+              <div className="min-w-0 flex-1">
+                <h4
+                  className="truncate font-medium text-white"
+                  title={device.name}
+                >
                   {device.name}
                 </h4>
-                <p className="text-sm text-slate-400">{device.type}</p>
+                <p
+                  className="truncate text-sm text-slate-400"
+                  title={device.type}
+                >
+                  {device.type}
+                </p>
               </div>
             </div>
 
-            <div className="text-sm">
-              <p className="text-white">{device.ip}</p>
-              <p className="text-slate-400">{device.location || 'N/A'}</p>
+            <div className="min-w-0 text-sm">
+              <p className="truncate text-white" title={device.ip}>
+                {formatIPv6(device.ip)}
+              </p>
+              <p
+                className="truncate text-slate-400"
+                title={device.location || 'N/A'}
+              >
+                {truncateText(device.location || 'N/A', 12)}
+              </p>
             </div>
 
             <div className="flex items-center">
@@ -215,7 +250,7 @@ const DeviceListRow = React.memo<{
             </div>
 
             <div className="text-center text-sm">
-              <p className="text-white">{device.uptime}%</p>
+              <p className="text-white">{formatPercentage(device.uptime)}</p>
               <p className="text-slate-400">время работы</p>
             </div>
 
@@ -267,6 +302,7 @@ export const DevicesSection: React.FC<DevicesSectionProps> = (props) => {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [showScanner, setShowScanner] = useState(false);
 
   const handleAddDevice = () => {
     if (props.onAddDevice) {
@@ -399,6 +435,15 @@ export const DevicesSection: React.FC<DevicesSectionProps> = (props) => {
     }
   };
 
+  const handleDevicesSelected = (
+    devices: Omit<NetworkDevice, 'id' | 'lastSeen' | 'status'>[]
+  ) => {
+    // Здесь можно добавить логику для массового создания устройств
+    // Пока что просто показываем уведомление
+    success('Устройства найдены', `Найдено ${devices.length} новых устройств`);
+    setShowScanner(false);
+  };
+
   return (
     <Card className="border-slate-700 bg-slate-800/50">
       <div className="p-6">
@@ -416,6 +461,14 @@ export const DevicesSection: React.FC<DevicesSectionProps> = (props) => {
           </div>
 
           <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setShowScanner(true)}
+              className="flex items-center space-x-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-700"
+            >
+              <Scan className="h-4 w-4" />
+              <span>Сканировать сеть</span>
+            </button>
+
             <button
               onClick={async () => {
                 const { pingDevice } = useNetworkStore.getState();
@@ -582,6 +635,15 @@ export const DevicesSection: React.FC<DevicesSectionProps> = (props) => {
           )}
         </div>
       </div>
+
+      {/* Network Scanner Modal */}
+      <NetworkScanner
+        isOpen={showScanner}
+        onClose={() => setShowScanner(false)}
+        onDevicesSelected={handleDevicesSelected}
+        folders={folders}
+        defaultFolderId={selectedFolderId}
+      />
     </Card>
   );
 };

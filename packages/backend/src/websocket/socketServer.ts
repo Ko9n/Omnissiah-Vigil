@@ -98,14 +98,23 @@ export class SocketServer {
     // Добавляем middleware для аутентификации
     // this.io.use(authMiddleware);
 
-    // Загружаем устройства из базы при старте
-    this.loadDevicesFromDB();
-
     this.setupSocketHandlers();
+  }
+
+  // Метод для инициализации после подключения к базе данных
+  public async initialize(): Promise<void> {
+    await this.loadDevicesFromDB();
   }
 
   private async loadDevicesFromDB() {
     try {
+      // Проверяем, подключена ли база данных
+      if (!dbManager.isDatabaseConnected()) {
+        log.warn("Database not connected, skipping device loading");
+        this.devices = [];
+        return;
+      }
+
       const prisma = dbManager.getClient();
       this.devices = await prisma.device.findMany();
       log.websocket(`Loaded ${this.devices.length} devices from database`);

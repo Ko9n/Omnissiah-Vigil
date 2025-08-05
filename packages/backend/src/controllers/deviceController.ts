@@ -558,3 +558,522 @@ export const pingDevice = async (
     });
   }
 };
+
+// POST /api/devices/scan-network - сканировать сеть с помощью nmap
+export const scanNetwork = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const {
+      network,
+      timeout = 10000,
+      scanType = "ping", // ping, tcp, snmp
+      ports = "22,80,443,161",
+    } = req.body;
+
+    if (!network) {
+      res.status(400).json({
+        success: false,
+        error:
+          "Необходимо указать сеть для сканирования (например: 192.168.1.0/24)",
+      });
+      return;
+    }
+
+    // Проверяем формат CIDR
+    if (!/^\d+\.\d+\.\d+\.\d+\/\d+$/.test(network)) {
+      res.status(400).json({
+        success: false,
+        error:
+          "Неверный формат сети. Используйте CIDR формат (например: 192.168.1.0/24)",
+      });
+      return;
+    }
+
+    log.monitoring(`Starting nmap scan for: ${network} (type: ${scanType})`);
+
+    // Проверяем доступность nmap
+    let nmapPath = "nmap";
+    let nmapAvailable = false;
+
+    // Сначала пробуем стандартный путь
+    try {
+      await execAsync("nmap --version", { timeout: 5000 });
+      nmapAvailable = true;
+    } catch (error) {
+      log.debug("Nmap not found in PATH, trying alternative paths");
+    }
+
+    // Если не найден в PATH, пробуем альтернативные пути
+    if (!nmapAvailable) {
+      const nmapPaths = [
+        "C:\\Program Files (x86)\\Nmap\\nmap.exe",
+        "C:\\Program Files\\Nmap\\nmap.exe",
+        "C:\\Program Files (x86)\\Nmap\\nmap.exe",
+      ];
+
+      for (const path of nmapPaths) {
+        try {
+          await execAsync(`"${path}" --version`, { timeout: 5000 });
+          nmapPath = path;
+          nmapAvailable = true;
+          log.debug(`Nmap found at: ${path}`);
+          break;
+        } catch (error) {
+          log.debug(`Nmap not found at: ${path}`);
+        }
+      }
+    }
+
+    if (!nmapAvailable) {
+      log.error("Nmap not available, falling back to ping scan");
+      return await fallbackPingScan(req, res);
+    }
+
+    // Проверяем, можем ли мы запустить nmap (сначала простой тест)
+    try {
+      const testResult = await execAsync(`"${nmapPath}" --version`, {
+        timeout: 5000,
+      });
+      log.monitoring(
+        `Nmap version check successful: ${testResult.stdout.split("\n")[0]}`
+      );
+    } catch (error) {
+      log.error("Cannot execute nmap, falling back to ping scan", error);
+      return await fallbackPingScan(req, res);
+    }
+
+    // Формируем команду nmap в зависимости от типа сканирования
+    let nmapCommand: string;
+
+    switch (scanType) {
+      case "tcp":
+        // TCP connect scan на указанных портах (не требует root)
+        nmapCommand = `"${nmapPath}" -sT -n --open -p ${ports} ${network}`;
+        break;
+      case "snmp":
+        // SNMP сканирование (fallback к ping scan)
+        log.warn(
+          "SNMP scan requires root privileges, falling back to ping scan"
+        );
+        return await fallbackPingScan(req, res);
+      case "full":
+        // Полное сканирование (fallback к ping scan)
+        log.warn(
+          "Full scan requires root privileges, falling back to ping scan"
+        );
+        return await fallbackPingScan(req, res);
+      default:
+        // TCP connect scan (по умолчанию) - не требует root
+        nmapCommand = `"${nmapPath}" -sT -Pn -p 80,443 -n --host-timeout 10s --max-retries 1 -T4 ${network}`;
+    }
+
+    log.monitoring(`Executing: ${nmapCommand}`);
+
+    // Выполняем nmap сканирование
+    let stdout = "";
+    let stderr = "";
+
+    try {
+      const result = await execAsync(nmapCommand, {
+        timeout: Math.max(timeout + 10000, 60000), // минимум 60 секунд
+      });
+      stdout = result.stdout;
+      stderr = result.stderr;
+      log.monitoring(`Nmap stdout: ${stdout.substring(0, 500)}...`);
+      if (stderr) {
+        log.monitoring(`Nmap stderr: ${stderr.substring(0, 500)}...`);
+      }
+    } catch (error: any) {
+      log.error("Nmap scan failed", error);
+      if (error?.stderr) {
+        stderr = error.stderr;
+        log.error(`Nmap error stderr: ${stderr}`);
+      }
+      if (error?.stdout) {
+        stdout = error.stdout;
+        log.monitoring(`Nmap error stdout: ${stdout.substring(0, 500)}...`);
+      }
+    }
+
+    if (stderr && !stderr.includes("WARNING") && !stderr.includes("RTTVAR")) {
+      log.error("Nmap scan error", stderr);
+    }
+
+    // Если nmap не вернул результатов, переключаемся на ping scan
+    if (!stdout || stdout.length < 100) {
+      log.warn("Nmap returned insufficient output, falling back to ping scan");
+      return await fallbackPingScan(req, res);
+    }
+
+    // Парсим результаты nmap
+    log.monitoring(`Parsing nmap output, length: ${stdout.length}`);
+    const discoveredHosts = parseNmapOutput(stdout, scanType);
+    log.monitoring(`Parsed ${discoveredHosts.length} hosts from nmap output`);
+
+    // Если nmap не нашел устройства, используем ping scan как backup
+    if (discoveredHosts.length === 0) {
+      log.warn("Nmap found no hosts, falling back to ping scan");
+      return await fallbackPingScan(req, res);
+    }
+
+    // Дополнительно получаем информацию через SNMP для найденных устройств
+    if (scanType === "snmp" || scanType === "full") {
+      await enrichWithSnmpData(discoveredHosts);
+    }
+
+    // Проверяем существующие устройства в базе
+    const prisma = dbManager.getClient();
+    const existingDevices = await prisma.device.findMany({
+      where: {
+        ip: {
+          in: discoveredHosts.map((h) => h.ip),
+        },
+      },
+      select: { ip: true, name: true },
+    });
+
+    const existingIps = new Set(existingDevices.map((d) => d.ip));
+    const newDevices = discoveredHosts.filter(
+      (host) => !existingIps.has(host.ip)
+    );
+
+    log.monitoring(
+      `Nmap scan completed. Found ${discoveredHosts.length} hosts, ${newDevices.length} new devices`
+    );
+
+    res.json({
+      success: true,
+      data: {
+        scanType,
+        totalHosts: discoveredHosts.length,
+        discoveredHosts,
+        newDevices,
+        existingDevices,
+      },
+    });
+  } catch (error) {
+    log.error("Error scanning network with nmap", error);
+    res.status(500).json({
+      success: false,
+      error: "Не удалось выполнить сканирование сети",
+    });
+  }
+};
+
+// Функция парсинга вывода nmap
+const parseNmapOutput = (
+  output: string,
+  scanType: string
+): Array<{
+  ip: string;
+  hostname?: string;
+  mac?: string;
+  vendor?: string;
+  status: "up" | "down";
+  ports?: string[];
+  os?: string;
+  services?: string[];
+}> => {
+  const hosts: Array<{
+    ip: string;
+    hostname?: string;
+    mac?: string;
+    vendor?: string;
+    status: "up" | "down";
+    ports?: string[];
+    os?: string;
+    services?: string[];
+  }> = [];
+
+  const lines = output.split("\n");
+  let currentHost: any = null;
+
+  log.monitoring(`Parsing ${lines.length} lines from nmap output`);
+
+  for (const line of lines) {
+    // Nmap scan report for IP
+    const hostMatch = line.match(/Nmap scan report for ([\d.]+)/);
+    if (hostMatch) {
+      if (currentHost) {
+        hosts.push(currentHost);
+      }
+      currentHost = {
+        ip: hostMatch[1],
+        status: "up" as const,
+        ports: [],
+        services: [],
+      };
+      continue;
+    }
+
+    // Hostname
+    const hostnameMatch = line.match(/Nmap scan report for (.+) \(([\d.]+)\)/);
+    if (hostnameMatch && currentHost) {
+      currentHost.hostname = hostnameMatch[1];
+      currentHost.ip = hostnameMatch[2];
+      continue;
+    }
+
+    // MAC Address
+    const macMatch = line.match(/MAC Address: ([A-Fa-f0-9:]+)\s*(\(.+\))?/);
+    if (macMatch && currentHost) {
+      currentHost.mac = macMatch[1];
+      if (macMatch[2]) {
+        currentHost.vendor = macMatch[2].replace(/[()]/g, "");
+      }
+      continue;
+    }
+
+    // Ports (any status: open, closed, filtered)
+    const portMatch = line.match(/^(\d+)\/\w+\s+(\w+)\s+(.+)/);
+    if (portMatch && currentHost) {
+      const port = portMatch[1];
+      const status = portMatch[2];
+      const service = portMatch[3].trim();
+
+      // Добавляем порт только если он open или если это первый порт для хоста
+      if (status === "open" || currentHost.ports?.length === 0) {
+        currentHost.ports?.push(port);
+        currentHost.services?.push(service);
+      }
+      continue;
+    }
+
+    // OS detection
+    const osMatch = line.match(/OS details: (.+)/);
+    if (osMatch && currentHost) {
+      currentHost.os = osMatch[1];
+      continue;
+    }
+  }
+
+  // Добавляем последний хост
+  if (currentHost) {
+    hosts.push(currentHost);
+  }
+
+  return hosts;
+};
+
+// Функция обогащения данных через SNMP
+const enrichWithSnmpData = async (hosts: Array<any>): Promise<void> => {
+  // TODO: Реализовать SNMP запросы для получения дополнительной информации
+  // Например: sysName, sysDescr, sysLocation, sysContact
+
+  for (const host of hosts) {
+    try {
+      // Базовый SNMP запрос для получения system description
+      const snmpCommand = `snmpget -v2c -c public ${host.ip} 1.3.6.1.2.1.1.1.0`;
+      const { stdout } = await execAsync(snmpCommand, { timeout: 3000 });
+
+      if (stdout && stdout.includes("STRING:")) {
+        const descMatch = stdout.match(/STRING:\s*"?([^"]+)"?/);
+        if (descMatch) {
+          host.snmpSysDescr = descMatch[1]?.trim();
+        }
+      }
+    } catch (error) {
+      // SNMP недоступен для этого хоста
+      continue;
+    }
+  }
+};
+
+// Fallback функция для ping сканирования (если nmap недоступен)
+const fallbackPingScan = async (req: Request, res: Response): Promise<void> => {
+  const { network } = req.body;
+
+  log.monitoring(`Fallback to ping scan for: ${network}`);
+
+  try {
+    // Извлекаем базовый IP из CIDR
+    const baseIp = network.split("/")[0];
+    const parts = baseIp.split(".");
+    const baseNetwork = `${parts[0]}.${parts[1]}.${parts[2]}`;
+
+    const discoveredHosts: Array<{
+      ip: string;
+      status: "up";
+      responseTime: number;
+    }> = [];
+
+    // Сканируем диапазон IP (например, 192.168.1.1-254)
+    // Ограничиваем количество одновременных запросов для стабильности
+    const batchSize = 20; // Увеличиваем размер батча для скорости
+    log.monitoring(
+      `Starting ping scan for ${baseNetwork}.1-254 in batches of ${batchSize}`
+    );
+
+    for (let i = 1; i <= 254; i += batchSize) {
+      const batch = [];
+      for (let j = 0; j < batchSize && i + j <= 254; j++) {
+        const ip = `${baseNetwork}.${i + j}`;
+        batch.push(
+          systemPing(ip)
+            .then((result) => {
+              if (result.alive) {
+                return {
+                  ip,
+                  status: "up" as const,
+                  responseTime: result.time,
+                };
+              }
+              return null;
+            })
+            .catch(() => null)
+        );
+      }
+
+      // Ждем завершения батча перед следующим
+      const batchResults = await Promise.allSettled(batch);
+      const batchFound = batchResults.filter(
+        (result) => result.status === "fulfilled" && result.value
+      ).length;
+
+      batchResults.forEach((result) => {
+        if (result.status === "fulfilled" && result.value) {
+          discoveredHosts.push(result.value);
+        }
+      });
+
+      log.monitoring(
+        `Batch ${Math.ceil(i / batchSize)}: found ${batchFound} hosts (total: ${
+          discoveredHosts.length
+        })`
+      );
+    }
+
+    // Проверяем существующие устройства в базе
+    const prisma = dbManager.getClient();
+    const existingDevices = await prisma.device.findMany({
+      where: {
+        ip: {
+          in: discoveredHosts.map((h) => h.ip),
+        },
+      },
+      select: { ip: true, name: true },
+    });
+
+    const existingIps = new Set(existingDevices.map((d) => d.ip));
+    const newDevices = discoveredHosts.filter(
+      (host) => !existingIps.has(host.ip)
+    );
+
+    log.monitoring(
+      `Ping scan completed. Found ${discoveredHosts.length} hosts, ${newDevices.length} new devices`
+    );
+
+    res.json({
+      success: true,
+      data: {
+        scanType: "ping",
+        totalHosts: discoveredHosts.length,
+        discoveredHosts,
+        newDevices,
+        existingDevices,
+      },
+    });
+  } catch (error) {
+    log.error("Error in fallback ping scan", error);
+    res.status(500).json({
+      success: false,
+      error: "Не удалось выполнить ping сканирование",
+    });
+  }
+};
+
+// POST /api/devices/bulk-create - массовое создание устройств
+export const bulkCreateDevices = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { devices, folderId = null } = req.body;
+
+    if (!Array.isArray(devices) || devices.length === 0) {
+      res.status(400).json({
+        success: false,
+        error: "Необходимо передать массив устройств",
+      });
+      return;
+    }
+
+    const prisma = dbManager.getClient();
+    const createdDevices = [];
+    const errors = [];
+
+    for (const deviceData of devices) {
+      try {
+        // Проверяем, не существует ли уже устройство с таким IP
+        const existingDevice = await prisma.device.findUnique({
+          where: { ip: deviceData.ip },
+        });
+
+        if (existingDevice) {
+          errors.push({
+            ip: deviceData.ip,
+            error: "Устройство с таким IP уже существует",
+          });
+          continue;
+        }
+
+        // Создаем устройство
+        const device = await prisma.device.create({
+          data: {
+            name: deviceData.name || `Device ${deviceData.ip}`,
+            ip: deviceData.ip,
+            mac: deviceData.mac || "",
+            type: deviceData.type || "workstation",
+            location: deviceData.location || "",
+            folderId: deviceData.folderId || folderId,
+            vendor: deviceData.vendor || "",
+            model: deviceData.model || "",
+            osVersion: deviceData.osVersion || "",
+            monitoringPing: true,
+            monitoringSnmp: false,
+            monitoringHttp: false,
+            monitoringSsh: false,
+          },
+          include: {
+            folder: true,
+          },
+        });
+
+        createdDevices.push(device);
+      } catch (error) {
+        errors.push({
+          ip: deviceData.ip,
+          error: error instanceof Error ? error.message : "Неизвестная ошибка",
+        });
+      }
+    }
+
+    // Очищаем кэш устройств
+    deviceCache.delete("devices:*");
+
+    log.api(
+      `Bulk created ${createdDevices.length} devices, ${errors.length} errors`
+    );
+
+    res.status(201).json({
+      success: true,
+      data: {
+        created: createdDevices,
+        errors,
+        summary: {
+          total: devices.length,
+          created: createdDevices.length,
+          errors: errors.length,
+        },
+      },
+    });
+  } catch (error) {
+    log.error("Error bulk creating devices", error);
+    res.status(500).json({
+      success: false,
+      error: "Не удалось создать устройства",
+    });
+  }
+};

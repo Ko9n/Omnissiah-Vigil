@@ -25,8 +25,8 @@ FROM node:18-alpine AS runner
 
 WORKDIR /app
 
-# Устанавливаем необходимые пакеты
-RUN apk add --no-cache openssl sqlite
+# Устанавливаем необходимые пакеты включая nmap для сканирования сети
+RUN apk add --no-cache openssl nmap
 
 # Копируем необходимые файлы из этапа сборки
 COPY --from=builder /app/dist ./dist

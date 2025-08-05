@@ -233,6 +233,9 @@ async function startServer() {
     // Initialize database first
     await initializeDatabase();
 
+    // Initialize WebSocket server after database connection
+    await socketServer.initialize();
+
     // Start HTTP server
     httpServer.listen(PORT, () => {
       log.info(`Server started on port ${PORT}`);

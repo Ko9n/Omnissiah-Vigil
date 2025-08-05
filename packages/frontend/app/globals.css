@@ -73,6 +73,18 @@
       background-position: 0% 50%;
     }
   }
+
+  /* Улучшенная обрезка текста */
+  .text-truncate-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Минимальная ширина для flex элементов */
+  .min-w-0 {
+    min-width: 0;
+  }
 }
 
 /* Custom scrollbar */

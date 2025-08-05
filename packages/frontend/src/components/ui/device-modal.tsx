@@ -14,7 +14,9 @@ import {
   Wifi,
   Shield,
   Check,
+  Search,
 } from 'lucide-react';
+import { NetworkScanner } from './network-scanner';
 
 interface DeviceModalProps {
   isOpen: boolean;
@@ -80,6 +82,7 @@ export function DeviceModal({
     },
   });
   const [ipError, setIpError] = useState<string | null>(null);
+  const [showScanner, setShowScanner] = useState(false);
 
   useEffect(() => {
     if (device) {
@@ -161,6 +164,25 @@ export function DeviceModal({
     console.log('📤 Отправляем данные устройства:', deviceData);
     onSave(deviceData);
     onClose();
+  };
+
+  const handleDevicesSelected = (
+    devices: Omit<NetworkDevice, 'id' | 'lastSeen' | 'status'>[]
+  ) => {
+    // Если выбран только один девайс, заполняем форму
+    if (devices.length === 1) {
+      const selectedDevice = devices[0];
+      setFormData((prev) => ({
+        ...prev,
+        ip: selectedDevice.ip,
+        mac: selectedDevice.mac || '',
+        vendor: selectedDevice.vendor || '',
+        name: selectedDevice.name,
+      }));
+    }
+    // Если выбрано несколько девайсов, можно добавить их все
+    // Пока что просто закрываем сканер
+    setShowScanner(false);
   };
 
   const getAllFolders = (
@@ -248,16 +270,28 @@ export function DeviceModal({
                   <label className="mb-2 block text-sm font-medium text-slate-300">
                     IP адрес *
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.ip}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, ip: e.target.value }))
-                    }
-                    className="w-full rounded-lg border border-slate-600 bg-slate-700 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="192.168.1.100"
-                  />
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      required
+                      value={formData.ip}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, ip: e.target.value }))
+                      }
+                      className="flex-1 rounded-lg border border-slate-600 bg-slate-700 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="192.168.1.100"
+                    />
+                    <motion.button
+                      type="button"
+                      onClick={() => setShowScanner(true)}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex items-center space-x-2 rounded-lg bg-blue-500 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-600"
+                    >
+                      <Search className="h-4 w-4" />
+                      <span className="hidden sm:inline">Сканировать</span>
+                    </motion.button>
+                  </div>
                   {ipError && (
                     <div className="mt-1 text-xs text-red-400">{ipError}</div>
                   )}
@@ -504,6 +538,15 @@ export function DeviceModal({
           </form>
         </motion.div>
       </motion.div>
+
+      {/* Network Scanner Modal */}
+      <NetworkScanner
+        isOpen={showScanner}
+        onClose={() => setShowScanner(false)}
+        onDevicesSelected={handleDevicesSelected}
+        folders={folders}
+        defaultFolderId={formData.folderId}
+      />
     </AnimatePresence>
   );
 }
