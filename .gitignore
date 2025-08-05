@@ -15,8 +15,16 @@ node_modules/
 dist
 dist-ssr
 .next
+.next/
 tsconfig.tsbuildinfo
 *.local
+
+# Large binary files
+*.node
+*.exe
+*.dll
+*.so
+*.dylib
 
 # Environment files
 .env
