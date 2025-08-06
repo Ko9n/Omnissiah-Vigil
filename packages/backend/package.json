@@ -31,6 +31,7 @@
     "ping": "^0.4.4",
     "socket.io": "^4.8.1",
     "systeminformation": "^5.21.22",
+    "winston": "^3.17.0",
     "ws": "^8.16.0",
     "zod": "^3.22.4"
   },

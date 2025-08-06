@@ -565,9 +565,17 @@ export const scanNetwork = async (
   res: Response
 ): Promise<void> => {
   try {
+    log.monitoring("Starting network scan request");
+
+    // Проверяем что ответ еще не был отправлен
+    if (res.headersSent) {
+      log.warn("Response already sent, skipping scan");
+      return;
+    }
+
     const {
       network,
-      timeout = 10000,
+      timeout = 30000, // Увеличиваем дефолтный timeout
       scanType = "ping", // ping, tcp, snmp
       ports = "22,80,443,161",
     } = req.body;
@@ -587,6 +595,27 @@ export const scanNetwork = async (
         success: false,
         error:
           "Неверный формат сети. Используйте CIDR формат (например: 192.168.1.0/24)",
+      });
+      return;
+    }
+
+    // Вычисляем размер сети и адаптируем timeout
+    const cidr = parseInt(network.split("/")[1]);
+    const hostCount = Math.pow(2, 32 - cidr);
+    const adaptiveTimeout = Math.max(
+      timeout,
+      hostCount > 256 ? 300000 : hostCount > 64 ? 120000 : 60000 // Увеличиваем timeouts
+    );
+
+    log.monitoring(
+      `Network scan: ${network} (${hostCount} potential hosts, timeout: ${adaptiveTimeout}ms)`
+    );
+
+    // Предупреждение для больших сетей
+    if (hostCount > 1024) {
+      res.status(400).json({
+        success: false,
+        error: `Сеть слишком большая (${hostCount} адресов). Используйте подсеть меньше /22 (максимум 1024 адреса).`,
       });
       return;
     }
@@ -648,25 +677,25 @@ export const scanNetwork = async (
     let nmapCommand: string;
 
     switch (scanType) {
+      case "ping":
+        // Ping scan - быстрое обнаружение живых хостов (оптимизировано для Windows)
+        nmapCommand = `"${nmapPath}" -sn -T4 --max-retries 1 --host-timeout 10s ${network}`;
+        break;
       case "tcp":
-        // TCP connect scan на указанных портах (не требует root)
-        nmapCommand = `"${nmapPath}" -sT -n --open -p ${ports} ${network}`;
+        // TCP scan - сканирование портов с определением сервисов
+        nmapCommand = `"${nmapPath}" -sT -sV -T4 -p ${ports} --open ${network}`;
         break;
       case "snmp":
-        // SNMP сканирование (fallback к ping scan)
-        log.warn(
-          "SNMP scan requires root privileges, falling back to ping scan"
-        );
-        return await fallbackPingScan(req, res);
+        // SNMP scan - для сетевых устройств (без требования root прав)
+        nmapCommand = `"${nmapPath}" -sT -T4 -p 161 ${network}`;
+        break;
       case "full":
-        // Полное сканирование (fallback к ping scan)
-        log.warn(
-          "Full scan requires root privileges, falling back to ping scan"
-        );
-        return await fallbackPingScan(req, res);
+        // Полное сканирование - без требования root прав
+        nmapCommand = `"${nmapPath}" -sT -sV -T4 -p 22,80,443,161,8080 ${network}`;
+        break;
       default:
-        // TCP connect scan (по умолчанию) - не требует root
-        nmapCommand = `"${nmapPath}" -sT -Pn -p 80,443 -n --host-timeout 10s --max-retries 1 -T4 ${network}`;
+        // По умолчанию используем ping scan для быстрого обнаружения
+        nmapCommand = `"${nmapPath}" -sn -T4 ${network}`;
     }
 
     log.monitoring(`Executing: ${nmapCommand}`);
@@ -677,11 +706,12 @@ export const scanNetwork = async (
 
     try {
       const result = await execAsync(nmapCommand, {
-        timeout: Math.max(timeout + 10000, 60000), // минимум 60 секунд
+        timeout: adaptiveTimeout + 10000, // добавляем 10 секунд запаса
       });
       stdout = result.stdout;
       stderr = result.stderr;
-      log.monitoring(`Nmap stdout: ${stdout.substring(0, 500)}...`);
+      log.monitoring(`Nmap stdout length: ${stdout.length}`);
+      log.monitoring(`Nmap stdout sample: ${stdout.substring(0, 500)}...`);
       if (stderr) {
         log.monitoring(`Nmap stderr: ${stderr.substring(0, 500)}...`);
       }
@@ -695,6 +725,16 @@ export const scanNetwork = async (
         stdout = error.stdout;
         log.monitoring(`Nmap error stdout: ${stdout.substring(0, 500)}...`);
       }
+
+      // Если nmap был убит по timeout, но есть частичные результаты, используем их
+      if (error?.code === 3221225725 && stdout && stdout.length > 50) {
+        log.warn(
+          "Nmap was killed by timeout but has partial results, using them"
+        );
+      } else if (!stdout && !stderr) {
+        log.warn("Nmap completely failed, falling back to ping scan");
+        return await fallbackPingScan(req, res);
+      }
     }
 
     if (stderr && !stderr.includes("WARNING") && !stderr.includes("RTTVAR")) {
@@ -702,8 +742,9 @@ export const scanNetwork = async (
     }
 
     // Если nmap не вернул результатов, переключаемся на ping scan
-    if (!stdout || stdout.length < 100) {
+    if (!stdout || stdout.length < 50) {
       log.warn("Nmap returned insufficient output, falling back to ping scan");
+      log.monitoring(`Nmap output was: "${stdout}"`);
       return await fallbackPingScan(req, res);
     }
 
@@ -743,22 +784,31 @@ export const scanNetwork = async (
       `Nmap scan completed. Found ${discoveredHosts.length} hosts, ${newDevices.length} new devices`
     );
 
-    res.json({
-      success: true,
-      data: {
-        scanType,
-        totalHosts: discoveredHosts.length,
-        discoveredHosts,
-        newDevices,
-        existingDevices,
-      },
-    });
+    // Проверяем что ответ еще не был отправлен
+    if (!res.headersSent) {
+      res.json({
+        success: true,
+        data: {
+          scanType,
+          totalHosts: discoveredHosts.length,
+          discoveredHosts,
+          newDevices,
+          existingDevices,
+        },
+      });
+    } else {
+      log.warn("Response already sent, skipping final response");
+    }
   } catch (error) {
     log.error("Error scanning network with nmap", error);
-    res.status(500).json({
-      success: false,
-      error: "Не удалось выполнить сканирование сети",
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: "Не удалось выполнить сканирование сети",
+      });
+    } else {
+      log.warn("Response already sent, cannot send error response");
+    }
   }
 };
 
@@ -790,71 +840,120 @@ const parseNmapOutput = (
   const lines = output.split("\n");
   let currentHost: any = null;
 
-  log.monitoring(`Parsing ${lines.length} lines from nmap output`);
+  log.monitoring(
+    `Parsing ${lines.length} lines from nmap output (scanType: ${scanType})`
+  );
 
   for (const line of lines) {
-    // Nmap scan report for IP
-    const hostMatch = line.match(/Nmap scan report for ([\d.]+)/);
+    const trimmedLine = line.trim();
+
+    // Nmap scan report для IP или hostname
+    const hostMatch = trimmedLine.match(/Nmap scan report for (.+)/);
     if (hostMatch) {
-      if (currentHost) {
+      if (currentHost && currentHost.ip) {
         hosts.push(currentHost);
       }
+
+      const target = hostMatch[1];
+      // Проверяем, является ли target IP адресом или hostname
+      const ipMatch = target.match(/([\d.]+)/);
+      const hostnameMatch = target.match(/(.+) \(([\d.]+)\)/);
+
       currentHost = {
-        ip: hostMatch[1],
         status: "up" as const,
         ports: [],
         services: [],
       };
-      continue;
-    }
 
-    // Hostname
-    const hostnameMatch = line.match(/Nmap scan report for (.+) \(([\d.]+)\)/);
-    if (hostnameMatch && currentHost) {
-      currentHost.hostname = hostnameMatch[1];
-      currentHost.ip = hostnameMatch[2];
-      continue;
-    }
-
-    // MAC Address
-    const macMatch = line.match(/MAC Address: ([A-Fa-f0-9:]+)\s*(\(.+\))?/);
-    if (macMatch && currentHost) {
-      currentHost.mac = macMatch[1];
-      if (macMatch[2]) {
-        currentHost.vendor = macMatch[2].replace(/[()]/g, "");
+      if (hostnameMatch) {
+        // Формат: "hostname (IP)"
+        currentHost.hostname = hostnameMatch[1];
+        currentHost.ip = hostnameMatch[2];
+      } else if (ipMatch) {
+        // Только IP адрес
+        currentHost.ip = target;
       }
       continue;
     }
 
-    // Ports (any status: open, closed, filtered)
-    const portMatch = line.match(/^(\d+)\/\w+\s+(\w+)\s+(.+)/);
-    if (portMatch && currentHost) {
-      const port = portMatch[1];
-      const status = portMatch[2];
-      const service = portMatch[3].trim();
+    if (!currentHost) continue;
 
-      // Добавляем порт только если он open или если это первый порт для хоста
-      if (status === "open" || currentHost.ports?.length === 0) {
-        currentHost.ports?.push(port);
+    // MAC Address и Vendor
+    const macMatch = trimmedLine.match(
+      /MAC Address: ([A-Fa-f0-9:]{17})\s*(\(.+\))?/
+    );
+    if (macMatch) {
+      currentHost.mac = macMatch[1].toUpperCase();
+      if (macMatch[2]) {
+        currentHost.vendor = macMatch[2].replace(/[()]/g, "").trim();
+      }
+      continue;
+    }
+
+    // Ports и Services
+    const portMatch = trimmedLine.match(/^(\d+)\/(\w+)\s+(\w+)\s+(.+)/);
+    if (portMatch) {
+      const port = portMatch[1];
+      const protocol = portMatch[2];
+      const state = portMatch[3];
+      const service = portMatch[4].trim();
+
+      // Добавляем только открытые порты или если scanType требует все порты
+      if (state === "open" || scanType === "full") {
+        currentHost.ports?.push(`${port}/${protocol}`);
         currentHost.services?.push(service);
       }
       continue;
     }
 
-    // OS detection
-    const osMatch = line.match(/OS details: (.+)/);
-    if (osMatch && currentHost) {
-      currentHost.os = osMatch[1];
+    // OS Detection
+    const osMatch = trimmedLine.match(/OS details: (.+)/);
+    if (osMatch) {
+      currentHost.os = osMatch[1].trim();
+      continue;
+    }
+
+    // Device type detection
+    const deviceMatch = trimmedLine.match(/Device type: (.+)/);
+    if (deviceMatch && !currentHost.os) {
+      currentHost.os = deviceMatch[1].trim();
+      continue;
+    }
+
+    // Running detection
+    const runningMatch = trimmedLine.match(/Running: (.+)/);
+    if (runningMatch && !currentHost.os) {
+      currentHost.os = runningMatch[1].trim();
+      continue;
+    }
+
+    // SNMP info для сетевых устройств
+    const snmpSysDescrMatch = trimmedLine.match(/sysDescr: (.+)/);
+    if (snmpSysDescrMatch) {
+      currentHost.os = snmpSysDescrMatch[1].trim();
       continue;
     }
   }
 
   // Добавляем последний хост
-  if (currentHost) {
+  if (currentHost && currentHost.ip) {
     hosts.push(currentHost);
   }
 
-  return hosts;
+  // Фильтруем результаты в зависимости от типа сканирования
+  let filteredHosts = hosts;
+
+  if (scanType === "ping") {
+    // Для ping scan показываем все найденные хосты
+    filteredHosts = hosts.filter((host) => host.ip);
+  } else if (scanType === "tcp") {
+    // Для TCP scan показываем только хосты с открытыми портами
+    filteredHosts = hosts.filter((host) => host.ports && host.ports.length > 0);
+  }
+
+  log.monitoring(`Parsed ${filteredHosts.length} valid hosts from nmap output`);
+
+  return filteredHosts;
 };
 
 // Функция обогащения данных через SNMP
