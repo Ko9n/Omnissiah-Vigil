@@ -12,6 +12,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { NetworkDevice, DeviceFolder } from '@/types/schemas';
+import { api } from '@/lib/api';
 
 interface ScannedDevice {
   ip: string;
@@ -43,12 +44,18 @@ export function NetworkScanner({
   const [isScanning, setIsScanning] = useState(false);
   const [scanResults, setScanResults] = useState<{
     totalHosts: number;
-    newDevices: number;
-    existingDevices: number;
-    discoveredHosts: ScannedDevice[];
     newDevices: ScannedDevice[];
     existingDevices: Array<{ ip: string; name: string }>;
+    discoveredHosts: ScannedDevice[];
   } | null>(null);
+  const [scanJob, setScanJob] = useState<{
+    jobId: string;
+    status: 'pending' | 'running' | 'done' | 'error';
+    progress: number;
+    error?: string;
+  } | null>(null);
+  const [pollingIntervalId, setPollingIntervalId] =
+    useState<NodeJS.Timeout | null>(null);
   const [selectedDevices, setSelectedDevices] = useState<Set<string>>(
     new Set()
   );
@@ -91,31 +98,95 @@ export function NetworkScanner({
     setSelectedDevices(new Set());
 
     try {
-      const response = await fetch('/api/devices/scan-network', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          network: network.trim(),
-          timeout: 10000,
-          scanType: scanType,
-        }),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/devices/scan-network`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            network: network.trim(),
+            timeout: 30000,
+            scanType: scanType,
+          }),
+        }
+      );
 
       const result = await response.json();
 
       if (!result.success) {
-        throw new Error(result.error || 'Ошибка сканирования');
+        throw new Error(result.error || 'Ошибка запуска сканирования');
       }
 
-      setScanResults(result.data);
+      const { jobId } = result;
+      setScanJob({ jobId, status: 'pending', progress: 0 });
+
+      // Начинаем опрос прогресса
+      const id = setInterval(async () => {
+        try {
+          const statusResp = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/devices/scan-progress/${jobId}`
+          );
+          const statusJson = await statusResp.json();
+          if (!statusJson.success) {
+            throw new Error(statusJson.error || 'Ошибка получения статуса');
+          }
+          const data = statusJson.data as {
+            status: 'pending' | 'running' | 'done' | 'error';
+            progress: number;
+            results: ScannedDevice[];
+            error?: string;
+          };
+          setScanJob({
+            jobId,
+            status: data.status,
+            progress: data.progress,
+            error: data.error,
+          });
+
+          if (data.status === 'done') {
+            clearInterval(id);
+            setPollingIntervalId(null);
+
+            // Трансформация результатов
+            const transformed = {
+              totalHosts: data.results.length,
+              newDevices: data.results,
+              existingDevices: [] as Array<{ ip: string; name: string }>,
+              discoveredHosts: data.results,
+            };
+            setScanResults(transformed);
+            setIsScanning(false);
+          }
+          if (data.status === 'error') {
+            clearInterval(id);
+            setPollingIntervalId(null);
+            setError(data.error || 'Ошибка сканирования');
+            setIsScanning(false);
+          }
+        } catch (pollErr) {
+          clearInterval(id);
+          setPollingIntervalId(null);
+          setError(
+            pollErr instanceof Error ? pollErr.message : 'Ошибка опроса'
+          );
+          setIsScanning(false);
+        }
+      }, 2000);
+      setPollingIntervalId(id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
-    } finally {
       setIsScanning(false);
     }
   };
+
+  // Очистка интервала при закрытии
+  React.useEffect(() => {
+    return () => {
+      if (pollingIntervalId) clearInterval(pollingIntervalId);
+    };
+  }, [pollingIntervalId]);
 
   const handleDeviceToggle = (ip: string) => {
     const newSelected = new Set(selectedDevices);
@@ -138,7 +209,7 @@ export function NetworkScanner({
     setSelectedDevices(new Set());
   };
 
-  const handleAddSelected = () => {
+  const handleAddSelected = async () => {
     if (!scanResults || selectedDevices.size === 0) return;
 
     const devicesToAdd = scanResults.newDevices
@@ -161,11 +232,20 @@ export function NetworkScanner({
           http: false,
           ssh: false,
         },
-        position: null,
+        position: undefined,
       }));
 
-    onDevicesSelected(devicesToAdd);
-    onClose();
+    try {
+      // вызов bulk API
+      await api.devices.bulkCreateDevices(devicesToAdd, selectedFolderId);
+      // уведомление можно заменить на toast
+      alert(`Добавлено устройств: ${devicesToAdd.length}`);
+      onDevicesSelected(devicesToAdd);
+      onClose();
+    } catch (err: any) {
+      console.error('Bulk create error', err);
+      setError(err.message || 'Ошибка добавления устройств');
+    }
   };
 
   const flatFolders = getAllFolders(folders);

@@ -1,5 +1,5 @@
 {
-  "name": "network-monitor-frontend",
+  "name": "@monitoring/frontend",
   "version": "1.0.0",
   "private": true,
   "description": "Frontend для системы мониторинга сети на Next.js",
@@ -17,6 +17,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@monitoring/shared": "workspace:*",
     "@hookform/resolvers": "^3.3.2",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-dropdown-menu": "^2.0.6",

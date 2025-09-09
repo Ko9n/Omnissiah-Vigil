@@ -5,10 +5,18 @@ import {
   createDevice,
   updateDevice,
   deleteDevice,
-  pingDevice,
-  scanNetwork,
+} from "../controllers/deviceCrudController";
+import { pingDevice } from "../controllers/pingController";
+import {
+  scanNetwork as scanNetworkOld,
+  startNetworkScan,
+  getScanStatus,
+} from "../controllers/networkController";
+import {
   bulkCreateDevices,
-} from "../controllers/deviceController";
+  bulkUpdateDevices,
+  bulkDeleteDevices,
+} from "../controllers/bulkController";
 
 const router: RouterType = Router();
 
@@ -31,9 +39,16 @@ router.delete("/:id", deleteDevice);
 router.post("/:id/ping", pingDevice);
 
 // POST /api/devices/scan-network - сканировать сеть
-router.post("/scan-network", scanNetwork);
+router.post("/scan-network", startNetworkScan);
+router.get("/scan-progress/:id", getScanStatus);
 
 // POST /api/devices/bulk-create - массовое создание устройств
 router.post("/bulk-create", bulkCreateDevices);
+
+// PUT /api/devices/bulk-update - массовое обновление устройств
+router.put("/bulk-update", bulkUpdateDevices);
+
+// DELETE /api/devices/bulk-delete - массовое удаление устройств
+router.delete("/bulk-delete", bulkDeleteDevices);
 
 export default router;

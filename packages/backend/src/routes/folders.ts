@@ -7,7 +7,7 @@ import {
   deleteFolder,
 } from "../controllers/folderController";
 
-const router = Router();
+const router: RouterType = Router();
 
 // GET /api/folders - получить все папки
 router.get("/", getAllFolders);

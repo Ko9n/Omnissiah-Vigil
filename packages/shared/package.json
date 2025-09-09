@@ -1,0 +1,22 @@
+{
+  "name": "@monitoring/shared",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Общие типы и утилиты для системы мониторинга",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

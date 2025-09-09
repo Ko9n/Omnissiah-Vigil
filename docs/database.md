@@ -312,6 +312,4 @@ docker exec monitoring-postgres pg_isready -U monitoring_user
 docker exec -it monitoring-postgres psql -U monitoring_user -d monitoring_db -c "SELECT * FROM pg_stat_activity;"
 ```
 
----
-
 **Последнее обновление:** 2024-12-19

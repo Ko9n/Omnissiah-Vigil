@@ -39,8 +39,10 @@ export class ApiError extends Error {
 }
 
 // Base API configuration
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Базовый URL всегда заканчивается на /api
+const API_BASE_URL = `${(
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+).replace(/\/$/, '')}/api`;
 const API_TIMEOUT = 30000; // 30 seconds
 
 // HTTP client configuration
@@ -226,6 +228,16 @@ export class DevicesApi {
       `/devices/${id}/metrics`,
       { period }
     );
+  }
+
+  static async bulkCreateDevices(
+    devices: Omit<NetworkDevice, 'id' | 'lastSeen' | 'status'>[],
+    folderId?: string
+  ): Promise<ApiResponse<any>> {
+    return httpClient.post<ApiResponse<any>>('/devices/bulk-create', {
+      devices,
+      folderId,
+    });
   }
 }
 
